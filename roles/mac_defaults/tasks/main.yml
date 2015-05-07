@@ -1,0 +1,70 @@
+---
+- name: DNS setting
+  shell: networksetup -setdnsservers Wi-Fi 8.8.8.8 8.8.4.4
+
+- name: autohide Dock
+  shell: defaults write com.apple.dock autohide -bool true
+  notify: Restart SystemUIServer
+
+- name: change size Dock
+  shell: defaults write com.apple.dock tilesize -int 55
+
+- name: Finder show status bar
+  shell: defaults write com.apple.finder ShowStatusBar -bool true
+  notify: Restart Finder
+
+- name: Finder show pathbar
+  shell: defaults write com.apple.finder ShowPathbar -bool true
+  notify: Restart Finder
+
+- name: Finder change column view
+  shell: defaults write com.apple.finder FXPreferredViewStyle clmv
+  notify: Restart Finder
+
+- name: Finder show all extensions
+  shell: defaults write -g AppleShowAllExtensions -bool true
+  notify: Restart Finder
+
+- name: Finder open home folder by default in new window
+  shell: |
+    defaults write com.apple.finder NewWindowTarget -string "PfLo"
+    defaults write com.apple.finder NewWindowTargetPath -string "file://${HOME}"
+  notify: Restart Finder
+
+- name: Screencapture change file name
+  shell: defaults write com.apple.screencapture name Screenshot
+  notify: Restart SystemUIServer
+
+- name: Screencapture change save location
+  shell: defaults write com.apple.screencapture location ~/Pictures/Screenshots
+  notify: Restart SystemUIServer
+
+- name: Display Bluetooth in the menu bar
+  shell: defaults -currentHost write  com.apple.controlcenter Bluetooth -int 18
+  notify: Restart SystemUIServer
+
+- name: Trackpad Tap Clicking enable
+  shell: |
+    defaults write com.apple.AppleMultitouchTrackpad Clicking -bool true
+    defaults write com.apple.driver.AppleBluetoothMultitouch.trackpad Clicking -bool true
+    defaults -currentHost write -g com.apple.mouse.tapBehavior -bool true
+
+- name: Trackpad change speed
+  shell: defaults write -g com.apple.trackpad.scaling 3
+
+- name: Keybaord change key repeat
+  shell: |
+    defaults write NSGlobalDomain KeyRepeat -int 2
+    defaults write NSGlobalDomain InitialKeyRepeat -int 15
+
+- name: Three finger drag
+  shell: |
+    defaults write com.apple.AppleMultitouchTrackpad TrackpadThreeFingerDrag -bool true
+    defaults write com.apple.driver.AppleBluetoothMultitouch.trackpad TrackpadThreeFingerDrag -bool true
+
+- name: Do not create .DS_Store in shared folders
+  shell: defaults write com.apple.desktopservices DSDontWriteNetworkStores true
+
+- name: Directory to English
+  shell: rm -rf /Applications/.localized Desktop/.localized Documents/.localized Downloads/.localized Movies/.localized Music/.localized Library/.localized Pictures/.localized Public/.localized Applications/.localized
+  notify: Restart Finder

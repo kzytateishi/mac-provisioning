@@ -1,0 +1,43 @@
+---
+- name: Install Ruby plugin
+  shell: asdf plugin add ruby https://github.com/asdf-vm/asdf-ruby.git
+  failed_when: False
+
+- name: Install Node.js plugin
+  shell: asdf plugin add nodejs https://github.com/asdf-vm/asdf-nodejs.git
+  failed_when: False
+
+- name: Install Python plugin
+  shell: asdf plugin add python
+  failed_when: False
+
+- name: Install Flutter plugin
+  shell: asdf plugin add flutter
+  failed_when: False
+
+- name: Install Golang plugin
+  shell: asdf plugin-add golang https://github.com/kennyp/asdf-golang.git
+  failed_when: False
+
+- name: All plugin Update
+  shell: asdf plugin update --all
+
+- name: Install Ruby versions
+  shell: /bin/bash -lc "asdf install ruby {{ item }}"
+  with_items: "{{ ruby_versions }}"
+
+- name: Install Node.js versions
+  shell: /bin/bash -lc "asdf install nodejs {{ item }}"
+  with_items: "{{ nodejs_versions }}"
+
+- name: Install Python versions
+  shell: /bin/bash -lc "asdf install python {{ item }}"
+  with_items: "{{ python_versions }}"
+
+- name: Install Flutter versions
+  shell: /bin/bash -lc "asdf install flutter {{ item }}"
+  with_items: "{{ flultter_versions }}"
+
+- name: Install Golang versions
+  shell: /bin/bash -lc "asdf install golang {{ item }}"
+  with_items: "{{ golang_versions }}"

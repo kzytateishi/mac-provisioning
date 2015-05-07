@@ -1,0 +1,9 @@
+---
+- name: Create .ssh symlink
+  file: src=~/Dropbox/ssh/ dest=~/.ssh state=link
+
+- name: Change id_rsa permission
+  file: path=~/.ssh/id_rsa  mode=0600
+
+- name: add key
+  shell: ssh-add -K ~/.ssh/id_rsa

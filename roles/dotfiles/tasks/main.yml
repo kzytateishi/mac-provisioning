@@ -1,0 +1,30 @@
+---
+- name: Clone a dotfiles github repository
+  git:
+    repo: git@github.com:kzy52/dotfiles.git
+    dest: ~/workspace/dotfiles
+    clone: yes
+    update: yes
+
+- name: Run Shell
+  shell: sh ./install.sh
+  args:
+    chdir: ~/workspace/dotfiles
+
+- name: Create tmuxinator symlink
+  file: src=~/Dropbox/dotfiles/.tmuxinator dest=~/.tmuxinator state=link force=yes
+
+- name: Create .gitconfig.local symlink
+  file: src=~/Dropbox/dotfiles/.gitconfig.local dest=~/.gitconfig.local state=link force=yes
+
+- name: Create .aws symlink
+  file: src=~/Dropbox/dotfiles/.aws dest=~/.aws state=link force=yes
+
+- name: Create .ngrok symlink
+  file: src=~/Dropbox/dotfiles/.ngrok dest=~/.ngrok2 state=link
+
+- name: Create pictures symlink
+  file: src=~/Dropbox/Pictures/others dest=~/Pictures/others state=link force=yes
+
+- name: Create pictures symlink
+  file: src=~/Dropbox/Pictures/screenshots dest=~/Pictures/screenshots state=link force=yes

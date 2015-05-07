@@ -1,0 +1,10 @@
+apps:
+  - { name: "1 Password for Safari", id: "1569813296" }
+  - { name: "Final Cut Pro", id: "424389933" }
+  - { name: "OneTab", id: "1540160809" }
+  - { name: "Translate for Safari", id: "1445040281" }
+  - { name: "BetterSnapTool", id: "417375580" }
+  - { name: "Save to Pocket", id: "1477385213" }
+  - { name: "Amphetamine", id: "937984704" }
+  - { name: "Keynote", id: "409183694" }
+  - { name: "Xcode", id: "497799835" }

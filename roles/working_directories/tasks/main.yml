@@ -1,0 +1,3 @@
+---
+- name: Create parent working directory
+  file: path=~/workspace state=directory

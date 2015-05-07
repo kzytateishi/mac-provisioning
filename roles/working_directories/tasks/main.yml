@@ -1,0 +1,12 @@
+---
+- name: Create vagrant directory
+  file: path=~/vagrant state=directory
+
+- name: Create parent working directory
+  file: path=~/workspace state=directory
+
+- name: Create working directories
+  file: path=~/workspace/{{ item }} state=directory
+  with_items:
+    - personal
+    - sandbox

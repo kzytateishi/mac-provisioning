@@ -1,0 +1,15 @@
+---
+- name: Install fontforge for Ricty
+  homebrew: name=fontforge
+
+  #- name: Install Ricty
+  #homebrew: name=ricty
+
+- name: upgrade ricty
+  shell: brew install ricty --vim-powerline --powerline
+
+- name: copy font file
+  shell: cp -f $(brew --cellar ricty)/*/share/fonts/Ricty*.ttf ~/Library/Fonts/
+  args:
+    creates: ~/Library/Fonts/Ricty-Bold.ttf
+  notify: run fc-cache

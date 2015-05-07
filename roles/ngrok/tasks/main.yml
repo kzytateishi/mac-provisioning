@@ -1,0 +1,3 @@
+---
+- name: Create .ngrok symlink
+  file: src=~/Dropbox/secrets/ngrok/ dest=~/.ngrok2 state=link

@@ -1,0 +1,7 @@
+---
+- name: Create .aws symlink
+  file: src=~/Dropbox/secrets/aws/ dest=~/.aws state=link
+- name: Change credentials permission
+  file: path=~/.aws/credentials  mode=0600
+- name: Create .aws symlink
+  file: src=~/Dropbox/secrets/aws-credentials/ dest=~/Documents/aws-credentials state=link

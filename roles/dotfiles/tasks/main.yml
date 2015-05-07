@@ -1,0 +1,67 @@
+---
+- name: Create directories
+  file: path={{ item }} state=directory
+  with_items:
+    - ~/bin
+    - ~/.zsh
+    - ~/.zsh/functions
+    - ~/.vim/backups
+    - ~/.vim/swaps
+
+- name: Create dotfile symlinks
+  file: src=~/Dropbox/dotfiles/{{ item }} dest=~/{{ item }} state=link
+  with_items:
+    - .agignore
+    - .gemrc
+    - .gitattributes
+    - .gitconfig
+    - .gitconfig_local
+    - .gitignore
+    - .gitmessage
+    - .gitmodules
+    - .railsrc
+    - .tigrc
+    - .tmux.conf
+    - .vimrc
+    - .config
+
+- name: Create vim symlinks
+  file: src=~/Dropbox/dotfiles/.vim/{{ item }} dest=~/.vim/{{ item }} state=link
+  with_items:
+    - dict
+    - snippets
+    - syntax
+
+- name: Create zshenv symlinks
+  file: src=~/Dropbox/dotfiles/.zsh/{{ item }} dest=~/{{ item }} state=link
+  with_items:
+    - .zshenv
+
+- name: Create zsh symlinks
+  file: src=~/Dropbox/dotfiles/.zsh/{{ item }} dest=~/.zsh/{{ item }} state=link
+  with_items:
+    - .zshrc
+    - .zshrc.alias
+    - .zshrc.common
+    - .zshrc.osx
+    - .tmux.zsh
+    - functions/Completion
+
+- name: Create tmuxinator symlink
+  file: src=~/Dropbox/dotfiles/.tmuxinator dest=~/.tmuxinator state=link force=yes
+
+- name: Create script files
+  file: src=~/Dropbox/dotfiles/bin/{{ item }} dest=~/bin/{{ item }} state=link
+  with_items:
+    - battery
+    - get_loadaverage
+    - get_localip
+    - get_ssid
+    - get_used_mem
+    - sshs
+    - tmux-pbcopy
+    - wifi
+
+- name: mkdir vim-neobundle dir
+  file: path=~/.vim/bundle state=directory
+  notify: install neobundle

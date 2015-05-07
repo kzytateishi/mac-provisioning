@@ -1,0 +1,16 @@
+- hosts: localhost
+  connection: local
+  gather_facts: no
+  become: no
+  environment:
+    HOMEBREW_CASK_OPTS: "--appdir=/Applications"
+  roles:
+    - homebrew
+    - ricty
+    - ssh
+    - aws
+    - ngrok
+    - dotfiles
+    - ruby
+    - log_cleaner
+    - working_directories

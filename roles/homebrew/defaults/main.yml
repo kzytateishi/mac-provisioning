@@ -1,0 +1,84 @@
+---
+homebrew_taps:
+  - homebrew/dupes
+  - caskroom/cask
+  - caskroom/versions
+  - sanemat/font
+homebrew_packages:
+  - { name: ag }
+  - { name: autojump }
+  - { name: colordiff }
+  - { name: curl }
+  - { name: imagemagick }
+  - { name: neovim/neovim/neovim }
+  - { name: nginx }
+  - { name: nmap }
+  - { name: node }
+  - { name: nkf }
+  - { name: openssl }
+  - { name: pwgen }
+  - { name: qt }
+  - { name: readline }
+  - { name: redis }
+  - { name: tree }
+  - { name: wget }
+
+  # git
+  - { name: git }
+  - { name: git-flow }
+  - { name: tig }
+
+  # zsh
+  - { name: zsh }
+  - { name: zsh-completions }
+
+  # tmux
+  - { name: tmux }
+  - { name: reattach-to-user-namespace }
+
+  # ruby
+  - { name: rbenv }
+  - { name: rbenv-gemset }
+  - { name: rbenv-default-gems }
+  - { name: ruby-build }
+
+  # db
+  - { name: mysql, state: present }
+  - { name: postgresql }
+
+  - { name: ffmpeg }
+  - { name: mogenerator }
+
+homebrew_cask_packages:
+  - { name: '0xed' }
+  #- { name: 1password }
+  - { name: alfred }
+  - { name: atom }
+  - { name: appcleaner }
+  - { name: astah-community }
+  - { name: caffeine }
+  - { name: chatwork }
+  - { name: cyberduck }
+  - { name: firefox }
+  - { name: flux }
+  - { name: google-chrome }
+  - { name: google-japanese-ime }
+  - { name: intellij-idea-ce }
+  - { name: iterm2 }
+  - { name: java }
+  - { name: karabiner }
+  - { name: kindle }
+  - { name: macvim }
+  - { name: mysqlworkbench }
+  - { name: ngrok }
+  - { name: omnigraffle }
+  - { name: sequel-pro }
+  - { name: skitch }
+  - { name: skype }
+  - { name: slack }
+  #- { name: textwrangler }
+  - { name: xquartz }
+  - { name: wireshark }
+  - { name: vagrant }
+  - { name: vlc }
+  - { name: virtualbox }

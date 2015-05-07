@@ -1,0 +1,8 @@
+---
+- name: Create clean-log-files.plist
+  template:
+    src: clean-log-files.plist
+    dest: ~/Library/LaunchAgents/clean-log-files.plist
+
+- name: Load plist
+  shell: launchctl load ~/Library/LaunchAgents/clean-log-files.plist

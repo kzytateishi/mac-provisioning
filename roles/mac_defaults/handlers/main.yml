@@ -1,0 +1,12 @@
+---
+- name: Restart Finder
+  command: killall Finder
+
+- name: Restart Dock
+  command: killall Dock
+
+- name: Restart SystemUIServer
+  command: killall SystemUIServer
+
+- name: Restart Safari
+  command: killall Safari

@@ -1,0 +1,29 @@
+---
+- name: Remove all Dock items
+  command: dockutil --remove all
+  changed_when: false
+
+- name: Add apps to Dock
+  command: "dockutil --add '{{ item }}' --no-restart"
+  changed_when: false
+  loop:
+    - /System/Applications/System Settings.app
+    - /System/Applications/Music.app
+    - /System/Applications/iPhone Mirroring.app
+    - /Applications/Final Cut Pro.app
+    - /Applications/OBSBOT Center.app
+    - /Applications/Spark Desktop.app
+    - /Applications/Google Chrome.app
+    - /Applications/Docker.app
+  notify: Restart Dock
+
+- name: Add Downloads folder to Dock
+  command: >
+    dockutil --add '~/Downloads'
+    --view fan
+    --display stack
+    --sort dateadded
+    --section others
+    --no-restart
+  changed_when: false
+  notify: Restart Dock

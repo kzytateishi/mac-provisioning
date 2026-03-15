@@ -1,0 +1,12 @@
+---
+- name: Install language runtimes via mise
+  command: "mise install {{ item.name }}@{{ item.version }}"
+  loop: "{{ mise_languages }}"
+  register: mise_install
+  changed_when: "'installed' in mise_install.stderr"
+
+- name: Set global language versions via mise
+  command: "mise use --global {{ item.name }}@{{ item.version }}"
+  loop: "{{ mise_languages }}"
+  register: mise_use
+  changed_when: "'set' in mise_use.stderr"

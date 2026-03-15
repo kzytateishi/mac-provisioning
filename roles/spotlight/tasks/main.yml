@@ -1,0 +1,10 @@
+---
+- name: Disable Spotlight indexing on all volumes
+  command: mdutil -a -i off
+  become: true
+  changed_when: false
+
+- name: Erase Spotlight index data on all volumes
+  command: mdutil -a -E
+  become: true
+  changed_when: false

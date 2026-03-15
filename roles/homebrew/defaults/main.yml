@@ -1,0 +1,88 @@
+---
+homebrew_taps: []
+homebrew_packages:
+  - { name: atuin } # Next-gen shell history with SQLite and sync
+  - { name: awscli }
+  - { name: bandwhich } # Network bandwidth usage by process
+  - { name: bat } # Modern replacement for cat
+  - { name: bottom } # Modern system monitor (btm)
+  - { name: cocoapods }
+  - { name: curl }
+  - { name: direnv }
+  - { name: docker-completion } # Shell completions for Docker
+  - { name: dockutil } # Manage macOS Dock items
+  - { name: doggo } # Human-friendly DNS lookup CLI
+  - { name: dust } # More readable replacement for du
+  - { name: eza } # Modern replacement for ls
+  - { name: fd } # Faster and more user-friendly replacement for find
+  - { name: figlet }
+  - { name: forgit } # Interactive git operations powered by fzf
+  - { name: fzf } # Fuzzy finder for history, completion, and interactive selection
+  - { name: fzf-tab } # Use fzf as the zsh completion selector
+  - { name: gh } # GitHub CLI
+  - { name: git }
+  - { name: go-task }
+  - { name: graphviz }
+  - { name: httpie } # More user-friendly replacement for curl for HTTP/API requests
+  - { name: imagemagick }
+  - { name: iperf3 } # Network bandwidth measurement tool
+  - { name: jq }
+  - { name: killport }
+  - { name: lazygit }
+  - { name: mise }
+  - { name: mtr } # Network diagnostic tool combining ping and traceroute
+  - { name: mysql }
+  - { name: neovim }
+  - { name: nkf }
+  - { name: openapi-generator }
+  - { name: openssl }
+  - { name: procs } # Modern replacement for ps
+  - { name: pwgen }
+  - { name: qt }
+  - { name: readline }
+  - { name: ripgrep } # Faster replacement for grep / ag
+  - { name: sl }
+  - { name: starship }
+  - { name: telnet }
+  - { name: terraform }
+  - { name: tldr } # Simplified man pages
+  - { name: tig }
+  - { name: tmux }
+  - { name: trippy } # Modern network diagnostic tool similar to mtr
+  - { name: uv }
+  - { name: wget }
+  - { name: yq } # jq for YAML
+  - { name: zoxide } # Smarter replacement / enhancement for cd
+  - { name: zsh }
+  - { name: zsh-completions }
+
+homebrew_cask_packages:
+  - { name: 1password }
+  - { name: android-studio }
+  - { name: appcleaner }
+  - { name: aws-vault }
+  - { name: cmux }
+  - { name: cursor }
+  - { name: claude-code }
+  - { name: cleanshot }
+  - { name: datagrip }
+  - { name: fantastical }
+  - { name: figma }
+  - { name: fliqlo }
+  - { name: google-chrome }
+  - { name: font-hackgen }
+  - { name: font-hackgen-nerd }
+  - { name: iterm2 }
+  - { name: ngrok }
+  - { name: notion }
+  - { name: obsidian }
+  - { name: postman }
+  - { name: raycast }
+  - { name: slack }
+  - { name: spotify }
+  - { name: visual-studio-code }
+
+  # fonts
+  - { name: font-roboto }
+  - { name: font-noto-sans }
+  - { name: font-noto-serif }

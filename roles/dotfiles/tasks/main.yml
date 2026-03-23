@@ -1,0 +1,65 @@
+---
+- name: Clone a dotfiles github repository
+  git:
+    repo: git@github.com:kzytateishi/dotfiles.git
+    dest: ~/workspace/dotfiles
+    clone: true
+    update: false
+    accept_hostkey: true
+
+- name: Run Taskfile
+  shell: task install
+  args:
+    chdir: ~/workspace/dotfiles
+  changed_when: false
+
+- name: Create tmuxinator symlink
+  file:
+    src: ~/Dropbox/dotfiles/.tmuxinator
+    dest: ~/.tmuxinator
+    state: link
+    force: true
+
+- name: Create .gitconfig.local symlink
+  file:
+    src: ~/Dropbox/dotfiles/.gitconfig.local
+    dest: ~/.gitconfig.local
+    state: link
+    force: true
+
+- name: Create .aws symlink
+  file:
+    src: ~/Dropbox/dotfiles/.aws
+    dest: ~/.aws
+    state: link
+    force: true
+
+- name: Create .ngrok symlink
+  file:
+    src: ~/Dropbox/dotfiles/.ngrok
+    dest: ~/.ngrok2
+    state: link
+
+- name: Create .serena directory
+  file:
+    path: ~/.serena
+    state: directory
+
+- name: Create serena_config.yml symlink
+  file:
+    src: ~/Dropbox/dotfiles/serena_config.yml
+    dest: ~/.serena/serena_config.yml
+    state: link
+    force: true
+
+- name: Create .zsh_hist_tmux symlink
+  file:
+    src: ~/Dropbox/dotfiles/.zsh_hist_projects
+    dest: ~/.zsh_hist_projects
+    state: link
+    force: true
+
+- name: Create ~/bin directory
+  file:
+    path: ~/bin
+    state: directory

@@ -1,0 +1,7 @@
+---
+- name: Cursor disable press and hold
+  shell: |
+    CURSOR_BUNDLE_ID=$(osascript -e 'id of app "Cursor"')
+    defaults write ${CURSOR_BUNDLE_ID} ApplePressAndHoldEnabled -bool false
+    defaults delete -g ApplePressAndHoldEnabled 2>/dev/null || true
+  changed_when: false

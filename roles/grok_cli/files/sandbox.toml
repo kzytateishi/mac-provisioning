@@ -1,0 +1,10 @@
+# Grok Build CLI (xai-org/grok-build) のカスタムサンドボックスプロファイル。
+# mac-provisioning の grok_cli ロールが配布する (symlink は grok が拒否するため実ファイル)。
+
+# read-only 相当のレビュー用プロファイル。
+# 組み込みの read-only は restrict_network を含み、その runtime-socket deny が
+# Docker Desktop (macOS) の /var/run/docker.sock (symlink) を解決できず起動拒否になる。
+# macOS では restrict_network はどのみち no-op のため、明示的に無効化して回避する。
+[profiles.review]
+extends = "read-only"
+restrict_network = false

@@ -1,0 +1,23 @@
+---
+dock_apps:
+  # システム
+  - /System/Applications/System Settings.app
+  - /System/Applications/iPhone Mirroring.app
+  # コミュニケーション
+  - /Applications/Spark Desktop.app
+  - /Applications/Slack.app
+  # ブラウザ
+  - /Applications/Google Chrome.app
+  # プロダクティビティ
+  - /Applications/Notion.app
+  - /Applications/Linear.app
+  # クリエイティブ・デザイン
+  - /Applications/Figma.app
+  - /Applications/Final Cut Pro.app
+  - /Applications/OBSBOT Center.app
+  # 開発
+  - /Applications/Cursor.app
+  - /Applications/iTerm.app
+  - /Applications/Docker.app
+  # ユーティリティ
+  - /Applications/1Password.app

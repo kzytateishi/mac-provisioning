@@ -1,0 +1,20 @@
+---
+- name: Remove .localized files from home directories
+  file:
+    path: "~/{{ item }}/.localized"
+    state: absent
+  loop:
+    - Desktop
+    - Documents
+    - Downloads
+    - Library
+    - Movies
+    - Music
+    - Pictures
+    - Public
+  ignore_errors: true
+
+- name: Create parent working directory
+  file:
+    path: ~/workspace
+    state: directory

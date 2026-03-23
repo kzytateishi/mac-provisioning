@@ -1,0 +1,16 @@
+---
+# 公式 Grok Build CLI (xai-org/grok-build)。旧 @vibe-kit/grok-cli は
+# xAI API の Live search 廃止 (410) で動かなくなったため置き換えた。
+# インストーラは ~/.grok/bin に入れ、.zshrc に PATH ブロックを追記する
+# (dotfiles の .zshrc に追記済みなので二重追記はされない)。
+- name: Install Grok Build CLI (official installer)
+  shell: curl -fsSL https://x.ai/cli/install.sh | bash
+  args:
+    creates: "{{ ansible_facts.env.HOME }}/.grok/bin/grok"
+
+# ~/.grok 配下は symlink だと grok が起動拒否するため copy で配布する
+- name: Deploy grok sandbox profiles
+  copy:
+    src: sandbox.toml
+    dest: "{{ ansible_facts.env.HOME }}/.grok/sandbox.toml"
+    mode: "0644"

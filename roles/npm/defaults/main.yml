@@ -1,0 +1,4 @@
+---
+npm_global_packages:
+  - { name: "@google/gemini-cli" }
+  - { name: "@openai/codex" }

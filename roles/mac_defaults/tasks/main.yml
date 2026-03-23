@@ -1,0 +1,152 @@
+---
+- name: DNS setting
+  command: networksetup -setdnsservers Wi-Fi 8.8.8.8 8.8.4.4
+  changed_when: false
+
+- name: autohide Dock
+  community.general.osx_defaults:
+    domain: com.apple.dock
+    key: autohide
+    type: bool
+    value: true
+  notify: Restart Dock
+
+- name: change size Dock
+  community.general.osx_defaults:
+    domain: com.apple.dock
+    key: tilesize
+    type: int
+    value: 55
+  notify: Restart Dock
+
+- name: Finder show status bar
+  community.general.osx_defaults:
+    domain: com.apple.finder
+    key: ShowStatusBar
+    type: bool
+    value: true
+  notify: Restart Finder
+
+- name: Finder show pathbar
+  community.general.osx_defaults:
+    domain: com.apple.finder
+    key: ShowPathbar
+    type: bool
+    value: true
+  notify: Restart Finder
+
+- name: Finder change column view
+  community.general.osx_defaults:
+    domain: com.apple.finder
+    key: FXPreferredViewStyle
+    type: string
+    value: clmv
+  notify: Restart Finder
+
+- name: Finder show all extensions
+  community.general.osx_defaults:
+    domain: NSGlobalDomain
+    key: AppleShowAllExtensions
+    type: bool
+    value: true
+  notify: Restart Finder
+
+- name: Finder open home folder by default in new window
+  shell: |
+    defaults write com.apple.finder NewWindowTarget -string "PfLo"
+    defaults write com.apple.finder NewWindowTargetPath -string "file://${HOME}"
+  changed_when: false
+  notify: Restart Finder
+
+- name: Screencapture change file name
+  community.general.osx_defaults:
+    domain: com.apple.screencapture
+    key: name
+    type: string
+    value: Screenshot
+  notify: Restart SystemUIServer
+
+- name: Screencapture change save location
+  community.general.osx_defaults:
+    domain: com.apple.screencapture
+    key: location
+    type: string
+    value: ~/Pictures/Screenshots
+  notify: Restart SystemUIServer
+
+- name: Display Bluetooth in the menu bar
+  community.general.osx_defaults:
+    domain: com.apple.controlcenter
+    key: Bluetooth
+    type: int
+    value: 18
+    host: currentHost
+  notify: Restart SystemUIServer
+
+- name: Trackpad Tap Clicking enable
+  shell: |
+    defaults write com.apple.AppleMultitouchTrackpad Clicking -bool true
+    defaults write com.apple.driver.AppleBluetoothMultitouch.trackpad Clicking -bool true
+    defaults -currentHost write -g com.apple.mouse.tapBehavior -bool true
+  changed_when: false
+
+- name: Trackpad change speed
+  command: defaults write -g com.apple.trackpad.scaling 3
+  changed_when: false
+
+- name: Keyboard change key repeat
+  shell: |
+    defaults write NSGlobalDomain KeyRepeat -int 2
+    defaults write NSGlobalDomain InitialKeyRepeat -int 15
+  changed_when: false
+
+- name: Three finger drag
+  shell: |
+    defaults write com.apple.AppleMultitouchTrackpad TrackpadThreeFingerDrag -bool true
+    defaults write com.apple.driver.AppleBluetoothMultitouch.trackpad TrackpadThreeFingerDrag -bool true
+  changed_when: false
+
+- name: Disable auto-correct
+  community.general.osx_defaults:
+    domain: NSGlobalDomain
+    key: NSAutomaticSpellingCorrectionEnabled
+    type: bool
+    value: false
+
+- name: Disable auto-capitalization
+  community.general.osx_defaults:
+    domain: NSGlobalDomain
+    key: NSAutomaticCapitalizationEnabled
+    type: bool
+    value: false
+
+- name: Disable smart quotes
+  community.general.osx_defaults:
+    domain: NSGlobalDomain
+    key: NSAutomaticQuoteSubstitutionEnabled
+    type: bool
+    value: false
+
+- name: Disable smart dashes
+  community.general.osx_defaults:
+    domain: NSGlobalDomain
+    key: NSAutomaticDashSubstitutionEnabled
+    type: bool
+    value: false
+
+- name: Set hot corner bottom-left to Lock Screen
+  community.general.osx_defaults:
+    domain: com.apple.dock
+    key: wvous-bl-corner
+    type: int
+    value: 13
+  notify: Restart Dock
+
+- name: Do not create .DS_Store in shared folders
+  command: defaults write com.apple.desktopservices DSDontWriteNetworkStores true
+  changed_when: false
+
+- name: Directory to English
+  command: rm -rf /Applications/.localized Desktop/.localized Documents/.localized Downloads/.localized Movies/.localized Music/.localized Library/.localized Pictures/.localized Public/.localized Applications/.localized
+  changed_when: false
+  notify: Restart Finder

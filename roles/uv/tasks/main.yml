@@ -1,0 +1,12 @@
+---
+- name: Install Python CLI tools via uv
+  command: "uv tool install {{ item.name }}"
+  args:
+    creates: "{{ ansible_env.HOME }}/.local/share/uv/tools/{{ item.name }}"
+  loop: "{{ uv_tool_packages }}"
+
+- name: Upgrade Python CLI tools via uv
+  command: uv tool upgrade --all
+  register: uv_upgrade
+  changed_when: "'Updated' in uv_upgrade.stderr"
+  when: uv_tool_packages | length > 0

@@ -1,0 +1,15 @@
+---
+- name: Create clean-log-files.plist
+  template:
+    src: clean-log-files.plist
+    dest: ~/Library/LaunchAgents/clean-log-files.plist
+
+- name: Check if plist is already loaded
+  command: launchctl list clean-log-files
+  register: plist_loaded
+  failed_when: false
+  changed_when: false
+
+- name: Load plist
+  command: launchctl load ~/Library/LaunchAgents/clean-log-files.plist
+  when: plist_loaded.rc != 0

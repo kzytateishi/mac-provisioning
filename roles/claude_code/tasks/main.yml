@@ -1,0 +1,4 @@
+---
+- name: Update plugin marketplaces
+  shell: claude plugin marketplace update
+  changed_when: false

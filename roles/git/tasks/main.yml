@@ -1,0 +1,30 @@
+---
+- name: Set default branch name to main
+  community.general.git_config:
+    name: init.defaultBranch
+    scope: global
+    value: main
+
+- name: Set pull strategy to rebase
+  community.general.git_config:
+    name: pull.rebase
+    scope: global
+    value: "true"
+
+- name: Set push default to current
+  community.general.git_config:
+    name: push.default
+    scope: global
+    value: current
+
+- name: Set push autoSetupRemote
+  community.general.git_config:
+    name: push.autoSetupRemote
+    scope: global
+    value: "true"
+
+- name: Set rebase autoStash
+  community.general.git_config:
+    name: rebase.autoStash
+    scope: global
+    value: "true"

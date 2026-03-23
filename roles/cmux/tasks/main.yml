@@ -1,0 +1,7 @@
+---
+- name: Create cmux symlink
+  file:
+    src: /Applications/cmux.app/Contents/Resources/bin/cmux
+    dest: /opt/homebrew/bin/cmux
+    state: link
+    force: true

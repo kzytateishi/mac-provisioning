@@ -1,0 +1,7 @@
+---
+- name: Install npm global packages
+  npm:
+    name: "{{ item.name }}"
+    global: true
+    state: "{{ item.state | default('latest') }}"
+  loop: "{{ npm_global_packages }}"

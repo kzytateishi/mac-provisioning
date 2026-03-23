@@ -1,0 +1,24 @@
+- hosts: localhost
+  connection: local
+  gather_facts: true
+  become: false
+  environment:
+    HOMEBREW_CASK_OPTS: "--appdir=/Applications"
+  roles:
+    # - mac_defaults
+    # - homebrew
+    # - dock
+    # - mas
+    # - log_cleaner
+    - working_directories
+    - zsh
+    - vscode
+    - cursor
+    - ssh
+    - git
+    # - mise
+    - macos_security
+    - cmux
+    - dotfiles
+    - claude_code
+    - spotlight

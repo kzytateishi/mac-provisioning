@@ -1,0 +1,7 @@
+---
+mise_languages:
+  - { name: node, version: latest }
+  - { name: ruby, version: latest }
+  - { name: python, version: latest }
+  - { name: go, version: latest }
+  - { name: pnpm, version: latest }

@@ -1,0 +1,32 @@
+---
+- name: Add Homebrew taps
+  homebrew_tap:
+    tap: "{{ item }}"
+    state: present
+  loop: "{{ homebrew_taps }}"
+
+- name: Update Homebrew
+  homebrew:
+    update_homebrew: true
+
+- name: Install Homebrew Cask packages
+  homebrew_cask:
+    name: "{{ item.name }}"
+  loop: "{{ homebrew_cask_packages }}"
+
+- name: Install Homebrew packages
+  homebrew:
+    name: "{{ item.name }}"
+    state: "{{ item.state | default('latest') }}"
+    install_options: "{{ item.install_options | default(omit) }}"
+  loop: "{{ homebrew_packages }}"
+
+- name: Install Terraform autocomplete
+  command: terraform -install-autocomplete
+  register: terraform_autocomplete
+  failed_when: false
+  changed_when: terraform_autocomplete.rc == 0
+
+- name: Clean Homebrew
+  command: brew cleanup
+  changed_when: false

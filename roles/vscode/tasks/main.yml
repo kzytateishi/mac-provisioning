@@ -1,0 +1,4 @@
+---
+- name: key repeat
+  shell: defaults write com.microsoft.VSCode ApplePressAndHoldEnabled -bool false
+  changed_when: false

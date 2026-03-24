@@ -1,0 +1,71 @@
+---
+- name: Remove .localized files from home directories
+  file:
+    path: "~/{{ item }}/.localized"
+    state: absent
+  loop:
+    - Desktop
+    - Documents
+    - Downloads
+    - Library
+    - Movies
+    - Music
+    - Pictures
+    - Public
+  ignore_errors: true
+
+- name: Create parent working directory
+  file:
+    path: ~/workspace
+    state: directory
+
+- name: Create Documents directory
+  file:
+    path: ~/Documents
+    state: directory
+
+- name: Create Documents/Contracts directory
+  file:
+    path: ~/Documents/Contracts
+    state: directory
+
+- name: Create symlinks under Documents
+  file:
+    src: "{{ lookup('env', 'HOME') }}/Dropbox/Documents/{{ item }}"
+    dest: "~/Documents/{{ item }}"
+    state: link
+    force: true
+  loop:
+    - Personal
+    - Works
+    - Tandems
+    - スキルシート
+
+- name: Create symlinks under Documents/Contracts
+  file:
+    src: "{{ lookup('env', 'HOME') }}/Dropbox/Documents/{{ item.src }}"
+    dest: "~/Documents/Contracts/{{ item.dest }}"
+    state: link
+    force: true
+  loop:
+    - { src: "外部請求書", dest: "外部請求書" }
+    - { src: "請求書", dest: "請求書" }
+    - { src: "領収書", dest: "領収書" }
+    - { src: "領収書2", dest: "領収書2" }
+    - { src: "Personal/個人の外注請求書", dest: "個人の外注請求書" }
+    - { src: "Personal/個人の領収書", dest: "個人の領収書" }
+
+- name: Create Pictures directory
+  file:
+    path: ~/Pictures
+    state: directory
+
+- name: Create symlinks under Pictures
+  file:
+    src: "{{ lookup('env', 'HOME') }}/Dropbox/Pictures/{{ item.src }}"
+    dest: "~/Pictures/{{ item.dest }}"
+    state: link
+    force: true
+  loop:
+    - { src: "Screenshots", dest: "Screenshots" }
+    - { src: "others", dest: "Others" }

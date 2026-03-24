@@ -1,0 +1,22 @@
+---
+- name: Remove all Dock items
+  command: dockutil --remove all
+  changed_when: false
+
+- name: Add apps to Dock
+  command: "dockutil --add '{{ item }}' --no-restart"
+  changed_when: false
+  failed_when: false
+  loop: "{{ dock_apps }}"
+  notify: Restart Dock
+
+- name: Add Downloads folder to Dock
+  command: >
+    dockutil --add '~/Downloads'
+    --view fan
+    --display stack
+    --sort dateadded
+    --section others
+    --no-restart
+  changed_when: false
+  notify: Restart Dock

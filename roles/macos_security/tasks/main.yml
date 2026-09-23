@@ -1,0 +1,20 @@
+---
+- name: Check FileVault status
+  command: fdesetup status
+  register: filevault_status
+  changed_when: false
+
+- name: Warn if FileVault is not enabled
+  debug:
+    msg: "FileVault is not enabled. Please enable it manually in System Settings > Privacy & Security > FileVault."
+  when: "'FileVault is Off' in filevault_status.stdout"
+
+- name: Check firewall status
+  command: /usr/libexec/ApplicationFirewall/socketfilterfw --getglobalstate
+  register: firewall_status
+  changed_when: false
+
+- name: Warn if firewall is not enabled
+  debug:
+    msg: "Firewall is not enabled. Run: sudo /usr/libexec/ApplicationFirewall/socketfilterfw --setglobalstate on"
+  when: "'disabled' in firewall_status.stdout"

@@ -1,0 +1,47 @@
+version: "3"
+
+silent: true
+
+tasks:
+  default:
+    desc: run のエイリアス
+    cmds:
+      - task: run
+
+  # パスワードは 2 回聞かれる。brew bundle の sudo (cask が未インストールのときだけ) と、
+  # ansible-playbook の BECOME password。2 回目も空で Enter せずにログインパスワードを入れる。
+  run:
+    desc: "playbook を実行する (例: task run -- --tags homebrew)"
+    cmds:
+      - task: casks
+      - ansible-playbook localhost.yml -K {{.CLI_ARGS}}
+
+  casks:
+    desc: sudo が要る cask (Brewfile.sudo) を端末で入れる。playbook の中では sudo のパスワードを聞けない
+    interactive: true
+    env:
+      HOMEBREW_BUNDLE_NO_LOCK: "1"
+    cmds:
+      - brew bundle install --file=Brewfile.sudo --no-upgrade
+
+  post-setup:
+    desc: playbook の後に、パスワードの入力や GUI の操作が要る設定を順に片付ける
+    interactive: true
+    cmds:
+      - bash scripts/post-setup.sh
+
+  check:
+    desc: 変更せずに差分だけ見る
+    cmds:
+      - ansible-playbook localhost.yml -K --check --diff {{.CLI_ARGS}}
+
+  syntax:
+    desc: 構文チェックだけ
+    cmds:
+      - ansible-playbook localhost.yml --syntax-check
+
+  lint:
+    desc: yamllint + ansible-lint
+    cmds:
+      - yamllint .
+      - ansible-lint

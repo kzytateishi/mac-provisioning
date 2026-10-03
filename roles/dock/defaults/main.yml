@@ -1,0 +1,24 @@
+---
+# 入れ方: cask → homebrew ロール、App Store → mas ロール
+# 並びは Dock の左からの順 (Finder は常に左端なので書かない)
+dock_apps:
+  - /System/Applications/System Settings.app
+  - /Applications/Xcode.app/Contents/Applications/DeviceHub.app # Xcode 同梱 (旧 Simulator)
+  - /System/Applications/iPhone Mirroring.app
+  - /Applications/1Password.app
+  - /Applications/Tailscale.app
+  - /Applications/Final Cut Pro.app
+  - /Applications/Docker.app
+  - /Applications/Google Chrome.app
+  - /Applications/Slack.app
+  - /Applications/Notion.app
+  - /Applications/Linear.app
+  - /Applications/Figma.app
+  - /Applications/Miro.app
+  - /Applications/Cursor.app
+  - /Applications/Orca.app
+  - /Applications/Obsidian.app
+  - /Applications/Claude.app
+  - /Applications/ChatGPT.app
+  - /Applications/iTerm.app
+  - "{{ ansible_facts.env.HOME }}/Applications/Personal OS.app" # 自作アプリ。無いマシンでは警告だけ出る

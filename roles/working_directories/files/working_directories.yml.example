@@ -1,0 +1,8 @@
+---
+# ~/Dropbox/05_Dev/mac-provisioning/working_directories.yml に置く。src は ~/Dropbox からの相対パス
+working_directories_documents_links:
+  - { src: "01_Company", dest: "Company" }
+  - { src: "02_Personal", dest: "Personal" }
+
+working_directories_contracts_links:
+  - { src: "01_Company/legal/orders", dest: "Orders" }

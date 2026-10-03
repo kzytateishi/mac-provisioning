@@ -1,0 +1,79 @@
+---
+- name: Add Homebrew taps
+  homebrew_tap:
+    tap: "{{ homebrew_taps }}"
+    state: present
+
+- name: Trust Homebrew taps
+  command: "brew trust {{ item }}"
+  loop: "{{ homebrew_taps }}"
+  register: homebrew_trust
+  changed_when: "'Already trusted' not in homebrew_trust.stdout"
+  check_mode: false
+
+- name: Update Homebrew
+  homebrew:
+    update_homebrew: true
+
+# cask は upgrade しない。docker-desktop や wireshark の更新は sudo と TTY が要り、
+# Ansible の中では止まる。cask の更新は手動で `brew upgrade --cask`。
+# 時間がかかるので普段は --skip-tags homebrew_upgrade で飛ばせる。
+- name: Upgrade installed formulae
+  command: brew upgrade --formula
+  register: homebrew_upgrade
+  changed_when: "'Upgrading' in homebrew_upgrade.stdout"
+  tags: homebrew_upgrade
+
+# name にリストを渡すと brew の起動が 1 回で済む (loop だとパッケージ数ぶん起動する)
+- name: Install Homebrew packages
+  homebrew:
+    name: "{{ homebrew_packages }}"
+    state: present
+
+# adopt: 手動で入れた同バージョンのアプリが /Applications にあれば brew 管理に取り込む
+- name: Install Homebrew Cask packages
+  homebrew_cask:
+    name: "{{ homebrew_cask_packages }}"
+    state: present
+    install_options: adopt
+
+# sudo が要る cask は playbook の中では入れられないので、抜けていたら知らせる
+- name: Check casks that need sudo
+  command: brew list --cask
+  register: homebrew_installed_casks
+  changed_when: false
+  check_mode: false
+
+- name: Warn about casks that need sudo
+  fail:
+    msg: >-
+      sudo が要る cask が未インストール: {{ homebrew_missing_sudo_casks | join(', ') }}。
+      端末で `task casks` を実行してください。
+  vars:
+    homebrew_missing_sudo_casks: "{{ homebrew_cask_sudo_packages | difference(homebrew_installed_casks.stdout_lines) }}"
+  when: homebrew_missing_sudo_casks | length > 0
+  ignore_errors: true
+
+# docker の zsh 補完。docker-completion formula は非推奨 (2027-05 に無効化) なので使わず、
+# Docker Desktop が同梱しているものをリンクする (_docker-compose は Docker Desktop が自分で張る)
+- name: Check Docker Desktop zsh completion
+  stat:
+    path: /Applications/Docker.app/Contents/Resources/etc/docker.zsh-completion
+  register: homebrew_docker_zsh_completion
+
+- name: Link Docker zsh completion
+  file:
+    src: /Applications/Docker.app/Contents/Resources/etc/docker.zsh-completion
+    dest: /opt/homebrew/share/zsh/site-functions/_docker
+    state: link
+  when: homebrew_docker_zsh_completion.stat.exists
+
+- name: Install Terraform autocomplete
+  command: terraform -install-autocomplete
+  register: homebrew_terraform_autocomplete
+  failed_when: false
+  changed_when: homebrew_terraform_autocomplete.rc == 0
+
+- name: Clean Homebrew
+  command: brew cleanup
+  changed_when: false

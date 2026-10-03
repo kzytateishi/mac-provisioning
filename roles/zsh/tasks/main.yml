@@ -1,0 +1,11 @@
+---
+- name: Install Zinit
+  shell: bash -c "$(curl --fail --show-error --silent --location https://raw.githubusercontent.com/zdharma-continuum/zinit/HEAD/scripts/install.sh)"
+  args:
+    creates: ~/.local/share/zinit/zinit.git
+
+- name: Install tmux plugin manager (tpm)
+  git:
+    repo: https://github.com/tmux-plugins/tpm.git
+    dest: ~/.tmux/plugins/tpm
+    update: false

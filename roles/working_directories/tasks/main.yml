@@ -1,0 +1,73 @@
+---
+- name: Remove .localized files from home directories
+  file:
+    path: "~/{{ item }}/.localized"
+    state: absent
+  loop:
+    - Desktop
+    - Documents
+    - Downloads
+    - Library
+    - Movies
+    - Music
+    - Pictures
+    - Public
+  ignore_errors: true
+
+- name: Create parent working directory
+  file:
+    path: ~/workspace
+    state: directory
+
+- name: Check the personal directory layout file
+  stat:
+    path: "{{ working_directories_links_file }}"
+  register: working_directories_links_file_stat
+
+- name: Load the personal directory layout
+  include_vars: "{{ working_directories_links_file }}"
+  when: working_directories_links_file_stat.stat.exists
+
+- name: Warn that the personal directory layout file is missing
+  debug:
+    msg: "{{ working_directories_links_file }} が無いので ~/Documents 配下の symlink を飛ばします"
+  when: not working_directories_links_file_stat.stat.exists
+
+- name: Create symlinks under Documents
+  file:
+    src: "{{ ansible_facts.env.HOME }}/Dropbox/{{ item.src }}"
+    dest: "~/Documents/{{ item.dest }}"
+    state: link
+    force: true
+  loop: "{{ working_directories_documents_links }}"
+
+- name: Create Documents/Contracts directory
+  file:
+    path: ~/Documents/Contracts
+    state: directory
+  when: working_directories_contracts_links | length > 0
+
+- name: Create symlinks under Documents/Contracts
+  file:
+    src: "{{ ansible_facts.env.HOME }}/Dropbox/{{ item.src }}"
+    dest: "~/Documents/Contracts/{{ item.dest }}"
+    state: link
+    force: true
+  loop: "{{ working_directories_contracts_links }}"
+
+- name: Create Pictures directory
+  file:
+    path: ~/Pictures
+    state: directory
+
+- name: Create symlinks under Pictures
+  file:
+    src: "{{ lookup('env', 'HOME') }}/Dropbox/03_Pictures/{{ item.src }}"
+    dest: "~/Pictures/{{ item.dest }}"
+    state: link
+    force: true
+  loop:
+    - { src: "Screenshots", dest: "Screenshots" }
+    - { src: "Misc", dest: "Others" }
+    - { src: "Photos", dest: "Photos" }
+    - { src: "Stock", dest: "Stock" }

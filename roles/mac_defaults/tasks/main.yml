@@ -1,0 +1,371 @@
+---
+# ---------------------------------------------------------------- Network
+- name: Get current DNS servers
+  command: networksetup -getdnsservers Wi-Fi
+  register: mac_defaults_current_dns
+  changed_when: false
+  check_mode: false
+
+- name: Set DNS servers
+  command: networksetup -setdnsservers Wi-Fi {{ mac_defaults_dns_servers | join(' ') }}
+  when: mac_defaults_current_dns.stdout_lines != mac_defaults_dns_servers
+
+# ---------------------------------------------------------------- Legacy cleanup
+# 旧 playbook が型指定なしの defaults write で書いた値は string で残っていて、
+# osx_defaults が "Type mismatch" で止まる。トラックパッドの Clicking は
+# システム設定で切り替えると int で書かれる。string / int のときだけ消して書き直させる。
+- name: Detect legacy string-typed defaults
+  command: defaults read-type {{ item.domain }} {{ item.key }}
+  loop:
+    - { domain: com.apple.desktopservices, key: DSDontWriteNetworkStores }
+    - { domain: NSGlobalDomain, key: com.apple.trackpad.scaling }
+    - { domain: com.apple.AppleMultitouchTrackpad, key: Clicking }
+    - { domain: com.apple.driver.AppleBluetoothMultitouch.trackpad, key: Clicking }
+    - { domain: com.apple.dock, key: tilesize } # システム設定は float で書く。旧 playbook は int で書いた
+  loop_control:
+    label: "{{ item.key }}"
+  register: mac_defaults_legacy_types
+  failed_when: false
+  changed_when: false
+  check_mode: false
+
+- name: Collect legacy string-typed keys
+  set_fact:
+    mac_defaults_legacy_keys: >-
+      {{ mac_defaults_legacy_types.results
+         | selectattr('stdout', 'search', 'Type is (string|integer)')
+         | map(attribute='item.key') | list }}
+
+- name: Remove legacy string-typed defaults
+  community.general.osx_defaults:
+    domain: "{{ item.item.domain }}"
+    key: "{{ item.item.key }}"
+    state: absent
+  loop: "{{ mac_defaults_legacy_types.results }}"
+  loop_control:
+    label: "{{ item.item.key }}"
+  when: item.item.key in mac_defaults_legacy_keys
+
+# ---------------------------------------------------------------- Dock
+- name: Dock autohide
+  community.general.osx_defaults:
+    domain: com.apple.dock
+    key: autohide
+    type: bool
+    value: true
+  notify: Restart Dock
+
+- name: Dock tile size
+  community.general.osx_defaults:
+    domain: com.apple.dock
+    key: tilesize
+    type: float
+    value: 55.0
+  notify: Restart Dock
+  when: not (ansible_check_mode and 'tilesize' in mac_defaults_legacy_keys)
+
+- name: Hot corner bottom-left to Lock Screen
+  community.general.osx_defaults:
+    domain: com.apple.dock
+    key: wvous-bl-corner
+    type: int
+    value: 13
+  notify: Restart Dock
+
+- name: Hot corner bottom-right disabled
+  community.general.osx_defaults:
+    domain: com.apple.dock
+    key: wvous-br-corner
+    type: int
+    value: 1 # 1 = なし (既定はクイックメモ)
+  notify: Restart Dock
+
+- name: Dock behaviour
+  community.general.osx_defaults:
+    domain: com.apple.dock
+    key: "{{ item.key }}"
+    type: "{{ item.type }}"
+    value: "{{ item.value }}"
+  loop:
+    - { key: show-recents, type: bool, value: false } # 最近使ったアプリを出さない
+    - { key: mru-spaces, type: bool, value: false } # 使用状況で操作スペースを並べ替えない
+    - { key: autohide-delay, type: float, value: 0.0 } # 自動非表示の Dock をすぐ出す
+    - { key: minimize-to-application, type: bool, value: true } # 最小化はアプリアイコンへ
+    - { key: expose-group-apps, type: bool, value: true } # Mission Control でウィンドウをアプリごとにまとめる
+  notify: Restart Dock
+
+- name: Tiled windows without margins
+  community.general.osx_defaults:
+    domain: com.apple.WindowManager
+    key: EnableTiledWindowMargins
+    type: bool
+    value: false
+
+# ---------------------------------------------------------------- Finder
+- name: Finder preferences
+  community.general.osx_defaults:
+    domain: com.apple.finder
+    key: "{{ item.key }}"
+    type: "{{ item.type }}"
+    value: "{{ item.value }}"
+  loop:
+    - { key: ShowStatusBar, type: bool, value: true }
+    - { key: ShowPathbar, type: bool, value: true }
+    - { key: FXPreferredViewStyle, type: string, value: clmv } # カラム表示
+    - { key: NewWindowTarget, type: string, value: PfLo } # 新規ウィンドウはホーム
+    - { key: NewWindowTargetPath, type: string, value: "file://{{ ansible_facts.env.HOME }}" }
+    - { key: _FXSortFoldersFirst, type: bool, value: true } # フォルダを先頭に
+    - { key: FXDefaultSearchScope, type: string, value: SCcf } # 検索は現在のフォルダ
+    - { key: FXEnableExtensionChangeWarning, type: bool, value: false } # 拡張子変更の警告を出さない
+    - { key: _FXShowPosixPathInTitle, type: bool, value: true } # タイトルにフルパス
+    - { key: ShowHardDrivesOnDesktop, type: bool, value: true } # デスクトップに内蔵ディスクを出す
+  notify: Restart Finder
+
+- name: Show all file extensions
+  community.general.osx_defaults:
+    domain: NSGlobalDomain
+    key: AppleShowAllExtensions
+    type: bool
+    value: true
+  notify: Restart Finder
+
+- name: Do not create .DS_Store on network and USB volumes
+  community.general.osx_defaults:
+    domain: com.apple.desktopservices
+    key: "{{ item }}"
+    type: bool
+    value: true
+  loop:
+    - DSDontWriteNetworkStores
+    - DSDontWriteUSBStores
+  # check モードでは上の削除が走らないので、型不一致になる項目は飛ばす
+  when: not (ansible_check_mode and item in mac_defaults_legacy_keys)
+
+# ---------------------------------------------------------------- Screenshot
+- name: Screencapture preferences
+  community.general.osx_defaults:
+    domain: com.apple.screencapture
+    key: "{{ item.key }}"
+    type: "{{ item.type }}"
+    value: "{{ item.value }}"
+  loop:
+    - { key: name, type: string, value: Screenshot }
+    - { key: location, type: string, value: "{{ ansible_facts.env.HOME }}/Pictures/Screenshots" }
+    - { key: type, type: string, value: png }
+    - { key: disable-shadow, type: bool, value: true } # ウィンドウの影を含めない
+  notify: Restart SystemUIServer
+
+# 標準のスクリーンショットのショートカットを切る (CleanShot に割り当てるため)。
+# 新しい Mac では plist にキー自体が無いので、キーの値ごと書く。
+- name: Check screenshot shortcuts
+  command: /usr/libexec/PlistBuddy -c "Print :AppleSymbolicHotKeys:{{ item.id }}:enabled" {{ ansible_facts.env.HOME }}/Library/Preferences/com.apple.symbolichotkeys.plist
+  loop: "{{ mac_defaults_disabled_screenshot_hotkeys }}"
+  loop_control:
+    label: "{{ item.id }}"
+  register: mac_defaults_screenshot_hotkeys
+  failed_when: false
+  changed_when: false
+  check_mode: false
+
+- name: Disable screenshot shortcuts
+  command: >-
+    defaults write com.apple.symbolichotkeys AppleSymbolicHotKeys -dict-add {{ item.item.id }}
+    '{ enabled = 0; value = { parameters = ({{ item.item.parameters | join(", ") }}); type = standard; }; }'
+  loop: "{{ mac_defaults_screenshot_hotkeys.results }}"
+  loop_control:
+    label: "{{ item.item.id }}"
+  when: item.stdout not in ['false', '0']
+  notify: Activate keyboard shortcuts
+
+# ---------------------------------------------------------------- CleanShot X
+# 保存先は macOS 標準のスクリーンショットと同じ (~/Pictures/Screenshots → Dropbox)
+- name: CleanShot preferences
+  community.general.osx_defaults:
+    domain: pl.maketheweb.cleanshotx
+    key: "{{ item.key }}"
+    type: "{{ item.type }}"
+    value: "{{ item.value }}"
+  loop:
+    - { key: exportPath, type: string, value: "{{ ansible_facts.env.HOME }}/Pictures/Screenshots" }
+    - { key: popupAskForDestinationWhenSaving, type: bool, value: false } # 保存のたびに保存先を聞かない
+    - { key: captureWithoutDesktopIcons, type: bool, value: true } # デスクトップのアイコンを写さない
+    - { key: deletePopupAfterDragging, type: bool, value: true } # ドラッグで渡したらプレビューを閉じる
+    - { key: popupSize, type: int, value: 2 } # 撮影後のプレビューの大きさ
+    - { key: transparentWindowBackground, type: bool, value: false } # ウィンドウの撮影は背景付き
+    - { key: analyticsAllowed, type: bool, value: false }
+    - { key: SUEnableAutomaticChecks, type: bool, value: false } # 更新は Homebrew で入れる
+  loop_control:
+    label: "{{ item.key }}"
+  notify: Restart CleanShot
+
+# ショートカットは data 型で、osx_defaults では書けないので defaults write -data で書く
+- name: Check CleanShot shortcuts
+  shell: defaults export pl.maketheweb.cleanshotx - | plutil -extract {{ item.key }} raw -o - -
+  loop: "{{ mac_defaults_cleanshot_shortcuts }}"
+  loop_control:
+    label: "{{ item.key }}"
+  register: mac_defaults_cleanshot_shortcuts_current
+  failed_when: false
+  changed_when: false
+  check_mode: false
+
+- name: Set CleanShot shortcuts
+  shell: >-
+    defaults write pl.maketheweb.cleanshotx {{ item.item.key }}
+    -data "$(printf '%s' '{{ item.item.value }}' | xxd -p | tr -d '\n')"
+  loop: "{{ mac_defaults_cleanshot_shortcuts_current.results }}"
+  loop_control:
+    label: "{{ item.item.key }}"
+  when: item.stdout != (item.item.value | b64encode)
+  notify: Restart CleanShot
+
+# ---------------------------------------------------------------- Menu bar
+- name: Display Bluetooth in the menu bar
+  community.general.osx_defaults:
+    domain: com.apple.controlcenter
+    key: Bluetooth
+    type: int
+    value: 18
+    host: currentHost
+  notify: Restart SystemUIServer
+
+- name: Display battery percentage in the menu bar
+  community.general.osx_defaults:
+    domain: com.apple.controlcenter
+    key: BatteryShowPercentage
+    type: bool
+    value: true
+  notify: Restart SystemUIServer
+
+# ---------------------------------------------------------------- Dialogs
+- name: Expand save and print dialogs by default
+  community.general.osx_defaults:
+    domain: NSGlobalDomain
+    key: "{{ item }}"
+    type: bool
+    value: true
+  loop:
+    - NSNavPanelExpandedStateForSaveMode
+    - NSNavPanelExpandedStateForSaveMode2
+    - PMPrintingExpandedStateForPrint
+    - PMPrintingExpandedStateForPrint2
+
+- name: Save new documents to disk instead of iCloud
+  community.general.osx_defaults:
+    domain: NSGlobalDomain
+    key: NSDocumentSaveNewDocumentsToCloud
+    type: bool
+    value: false
+
+- name: Quit the printer app when jobs finish
+  community.general.osx_defaults:
+    domain: com.apple.print.PrintingPrefs
+    key: Quit When Finished
+    type: bool
+    value: true
+
+# ---------------------------------------------------------------- Misc
+- name: Do not ask to use new disks for Time Machine
+  community.general.osx_defaults:
+    domain: com.apple.TimeMachine
+    key: DoNotOfferNewDisksForBackup
+    type: bool
+    value: true
+
+- name: Do not open Photos when a device is plugged in
+  community.general.osx_defaults:
+    domain: com.apple.ImageCapture
+    key: disableHotPlug
+    type: bool
+    value: true
+
+- name: Disable personalized ads
+  community.general.osx_defaults:
+    domain: com.apple.AdLib
+    key: allowApplePersonalizedAdvertising
+    type: bool
+    value: false
+
+- name: No feedback sound when changing volume
+  community.general.osx_defaults:
+    domain: NSGlobalDomain
+    key: com.apple.sound.beep.feedback
+    type: int
+    value: 0
+
+# ---------------------------------------------------------------- Trackpad
+- name: Trackpad tap to click and three finger drag
+  community.general.osx_defaults:
+    domain: "{{ item.domain }}"
+    key: "{{ item.key }}"
+    type: bool
+    value: true
+  loop:
+    - { domain: com.apple.AppleMultitouchTrackpad, key: Clicking }
+    - { domain: com.apple.driver.AppleBluetoothMultitouch.trackpad, key: Clicking }
+    - { domain: com.apple.AppleMultitouchTrackpad, key: TrackpadThreeFingerDrag }
+    - { domain: com.apple.driver.AppleBluetoothMultitouch.trackpad, key: TrackpadThreeFingerDrag }
+  when: not (ansible_check_mode and item.key in mac_defaults_legacy_keys)
+
+- name: Trackpad tap to click (current host)
+  community.general.osx_defaults:
+    domain: NSGlobalDomain
+    key: com.apple.mouse.tapBehavior
+    type: bool
+    value: true
+    host: currentHost
+
+- name: Trackpad speed
+  community.general.osx_defaults:
+    domain: NSGlobalDomain
+    key: com.apple.trackpad.scaling
+    type: float
+    value: 3.0
+  when: not (ansible_check_mode and 'com.apple.trackpad.scaling' in mac_defaults_legacy_keys)
+
+# ---------------------------------------------------------------- Keyboard
+- name: Key repeat
+  community.general.osx_defaults:
+    domain: NSGlobalDomain
+    key: "{{ item.key }}"
+    type: int
+    value: "{{ item.value }}"
+  loop:
+    - { key: KeyRepeat, value: 2 }
+    - { key: InitialKeyRepeat, value: 15 }
+
+- name: Disable auto-correct, auto-capitalization, smart quotes, dashes and periods
+  community.general.osx_defaults:
+    domain: NSGlobalDomain
+    key: "{{ item }}"
+    type: bool
+    value: false
+  loop:
+    - NSAutomaticSpellingCorrectionEnabled
+    - NSAutomaticCapitalizationEnabled
+    - NSAutomaticQuoteSubstitutionEnabled
+    - NSAutomaticDashSubstitutionEnabled
+    - NSAutomaticPeriodSubstitutionEnabled # スペース 2 回でピリオドにしない
+
+- name: Full keyboard access (Tab moves focus in dialogs)
+  community.general.osx_defaults:
+    domain: NSGlobalDomain
+    key: AppleKeyboardUIMode
+    type: int
+    value: 3
+
+# エディタでキー長押しをアクセント入力ではなくリピートにする。
+# グローバル設定が残っているとアプリ別設定が効かないので消す。
+- name: Remove global ApplePressAndHoldEnabled
+  community.general.osx_defaults:
+    domain: NSGlobalDomain
+    key: ApplePressAndHoldEnabled
+    state: absent
+
+- name: Disable press-and-hold in editors
+  community.general.osx_defaults:
+    domain: "{{ item }}"
+    key: ApplePressAndHoldEnabled
+    type: bool
+    value: false
+  loop: "{{ mac_defaults_press_and_hold_disabled_apps }}"

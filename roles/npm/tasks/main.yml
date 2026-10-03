@@ -1,0 +1,12 @@
+---
+- name: Install npm global packages
+  npm:
+    name: "{{ item.name }}"
+    global: true
+    state: "{{ item.state | default('latest') }}"
+  loop: "{{ npm_global_packages }}"
+  environment:
+    # mise で入れた node は shell 起動時の PATH にしか反映されないため、
+    # 同一 playbook 内で mise ロールが node を入れた直後は npm が見つからない。
+    # shims を明示的に前置して解決時に mise 経由で引かせる。
+    PATH: "{{ ansible_facts.env.HOME }}/.local/share/mise/shims:{{ ansible_facts.env.PATH }}"

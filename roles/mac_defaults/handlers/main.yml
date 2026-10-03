@@ -1,0 +1,20 @@
+---
+- name: Restart Finder
+  command: killall Finder
+
+- name: Restart Dock
+  command: killall Dock
+
+- name: Restart SystemUIServer
+  command: killall SystemUIServer
+
+- name: Restart Safari
+  command: killall Safari
+
+# CleanShot は設定を読み込んだまま持っているので再起動させる。起動していなければ何もしない
+- name: Restart CleanShot
+  shell: if pkill -x "CleanShot X"; then sleep 1; open -a "CleanShot X"; fi
+
+# symbolichotkeys は再ログインしないと効かないので、その場で読み直させる
+- name: Activate keyboard shortcuts
+  command: /System/Library/PrivateFrameworks/SystemAdministration.framework/Resources/activateSettings -u

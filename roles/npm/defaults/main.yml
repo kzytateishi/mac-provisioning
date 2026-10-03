@@ -1,0 +1,4 @@
+---
+# codex は Homebrew cask で入れるのでここには書かない
+npm_global_packages:
+  - { name: "@google/gemini-cli" }

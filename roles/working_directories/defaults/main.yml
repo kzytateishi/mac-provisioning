@@ -1,0 +1,9 @@
+---
+# 個人のディレクトリ構成 (~/Documents 配下の symlink) はリポジトリに置かず、Dropbox のこのファイルから読む。
+# 書き方は files/working_directories.yml.example
+working_directories_links_file: "{{ ansible_facts.env.HOME }}/Dropbox/05_Dev/mac-provisioning/working_directories.yml"
+
+# ~/Documents/<dest> → ~/Dropbox/<src>
+working_directories_documents_links: []
+# ~/Documents/Contracts/<dest> → ~/Dropbox/<src>
+working_directories_contracts_links: []

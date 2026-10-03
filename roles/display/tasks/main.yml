@@ -1,0 +1,22 @@
+---
+# 内蔵ディスプレイを「スペースを拡大」にする。解像度は defaults では書けないので displayplacer を使う。
+# 候補はマシンごとに違うので、scaling:on のモードで面積が最大のもの (= スペースを拡大) を選ぶ。
+# 出力は "<screen id> <目標 mode> <現在の mode>"。内蔵ディスプレイが無い Mac では空。
+- name: Find the built-in display's "More Space" mode
+  shell: |
+    set -o pipefail
+    displayplacer list | awk '
+      /^Persistent screen id:/ { builtin = 0; id = $4 }
+      /^Type: MacBook built in screen/ { builtin = 1; bid = id }
+      builtin && /<-- current mode/ { cur = $2 }
+      builtin && /scaling:on/ { split($3, r, ":"); split(r[2], wh, "x"); if (wh[1] * wh[2] > best) { best = wh[1] * wh[2]; mode = $2 } }
+      END { if (bid) { sub(":", "", mode); sub(":", "", cur); print bid, mode, cur } }'
+  register: display_more_space
+  changed_when: false
+  check_mode: false
+
+- name: Set the built-in display to "More Space"
+  command: displayplacer "id:{{ display_more_space.stdout.split()[0] }} mode:{{ display_more_space.stdout.split()[1] }}"
+  when:
+    - display_more_space.stdout | length > 0
+    - display_more_space.stdout.split()[1] != display_more_space.stdout.split()[2]

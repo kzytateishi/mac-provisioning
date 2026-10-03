@@ -1,0 +1,7 @@
+---
+# ツールとバージョンの定義は dotfiles の ~/.config/mise/config.toml が一次ソース。
+# ここでは定義どおりに入れるだけ (dotfiles ロールの後に実行すること)。
+- name: Install runtimes defined in ~/.config/mise/config.toml
+  command: mise install --yes
+  register: mise_install
+  changed_when: "'installed' in mise_install.stderr"

@@ -1,0 +1,23 @@
+---
+# `mas list` は Spotlight の索引でインストール済みを探すため、Spotlight を
+# オフにしているこの構成では使えない。アプリのパスの有無で判定する。
+# App Store にサインインしていないと mas install は失敗する → --skip-tags mas
+- name: Check which App Store applications are installed
+  stat:
+    path: "{{ item.app }}"
+  loop: "{{ mas_apps }}"
+  loop_control:
+    label: "{{ item.name }}"
+  register: mas_apps_stat
+
+# mas 7 以降 `mas install` は root 権限が必須 (-K の sudo パスワードを使う)
+- name: Install App Store applications
+  command: "mas install {{ item.item.id }}"
+  become: true
+  loop: "{{ mas_apps_stat.results }}"
+  loop_control:
+    label: "{{ item.item.name }}"
+  when: not item.stat.exists
+  environment:
+    # Spotlight の自動索引 (sudo を要求して止まる) を抑止する
+    MAS_NO_AUTO_INDEX: "1"

@@ -1,0 +1,63 @@
+- name: Provision this Mac
+  hosts: localhost
+  connection: local
+  gather_facts: true
+  become: false
+  environment:
+    HOMEBREW_CASK_OPTS: "--appdir=/Applications"
+
+  # ssh / dotfiles / working_directories は ~/Dropbox の同期完了が前提。
+  # 同期前に走ると symlink が宙に浮くので、最初に止める。
+  pre_tasks:
+    - name: Check that Dropbox is synced
+      stat:
+        path: ~/Dropbox/90_Secrets
+      register: dropbox_secrets
+      tags: always
+
+    - name: Fail if Dropbox is not synced yet
+      fail:
+        msg: >-
+          ~/Dropbox/90_Secrets が見つかりません。
+          Dropbox をインストールしてログインし、同期が終わってから再実行してください。
+      when: not dropbox_secrets.stat.exists
+      tags: always
+
+    # -K のパスワードが違うと、最初に become するタスク (mas など) まで進んでから止まる。
+    # 最初に確かめて、すぐ止める。
+    # パスワード違いは failed ではなく unreachable になるので、ignore_unreachable で受けて判定する
+    - name: Check the become password
+      command: /usr/bin/true
+      become: true
+      changed_when: false
+      check_mode: false
+      ignore_unreachable: true
+      register: become_check
+      tags: always
+
+    - name: Fail if the become password is wrong
+      fail:
+        msg: sudo のパスワードが通りませんでした。BECOME password にログインパスワードを入れて再実行してください。
+      when: become_check.unreachable | default(false)
+      tags: always
+
+  # 部分実行: ansible-playbook localhost.yml -K --tags homebrew,dock
+  # dotfiles は mise より前。~/.config/mise/config.toml を dotfiles が配るため。
+  roles:
+    - { role: mac_defaults, tags: [mac_defaults, defaults] }
+    - { role: homebrew, tags: [homebrew, brew] }
+    - { role: mas, tags: [mas, appstore] }
+    - { role: dock, tags: [dock] }
+    - { role: display, tags: [display] }
+    - { role: log_cleaner, tags: [log_cleaner] }
+    - { role: working_directories, tags: [working_directories, dirs] }
+    - { role: zsh, tags: [zsh] }
+    - { role: ssh, tags: [ssh] }
+    - { role: dotfiles, tags: [dotfiles] }
+    - { role: mise, tags: [mise, runtimes] }
+    - { role: npm, tags: [npm] }
+    - { role: grok_cli, tags: [grok_cli, ai] }
+    - { role: claude_code, tags: [claude_code, ai] }
+    - { role: spotlight, tags: [spotlight] }
+    # 警告を最後に出したいので末尾
+    - { role: macos_security, tags: [macos_security, security] }

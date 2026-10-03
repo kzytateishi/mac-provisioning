@@ -1,0 +1,8 @@
+---
+# id は `mas search <name>` で調べる。app はインストール済み判定に使うパス。
+# Xcode は十数 GB あるので時間がかかる。
+mas_apps:
+  - { name: "Final Cut Pro", id: "424389933", app: "/Applications/Final Cut Pro.app" }
+  - { name: "Amphetamine", id: "937984704", app: "/Applications/Amphetamine.app" }
+  - { name: "Canva", id: "897446215", app: "/Applications/Canva.app" }
+  - { name: "Xcode", id: "497799835", app: "/Applications/Xcode.app" }

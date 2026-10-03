@@ -1,0 +1,24 @@
+---
+- name: Check firewall status
+  command: /usr/libexec/ApplicationFirewall/socketfilterfw --getglobalstate
+  register: macos_security_firewall
+  changed_when: false
+  check_mode: false
+
+- name: Enable firewall
+  command: /usr/libexec/ApplicationFirewall/socketfilterfw --setglobalstate on
+  become: true
+  when: "'disabled' in macos_security_firewall.stdout"
+
+# FileVault はリカバリキーの保存が要るので自動化せず、目立つ形で警告だけ出す
+- name: Check FileVault status
+  command: fdesetup status
+  register: macos_security_filevault
+  changed_when: false
+  check_mode: false
+
+- name: Warn if FileVault is not enabled
+  fail:
+    msg: "FileVault が無効です。システム設定 > プライバシーとセキュリティ > FileVault から有効にしてください。"
+  when: "'FileVault is Off' in macos_security_filevault.stdout"
+  ignore_errors: true

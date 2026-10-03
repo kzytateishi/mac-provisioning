@@ -1,0 +1,52 @@
+---
+# 入っていないアプリは黙って飛ばさず、最後に目立つ形で知らせる
+# stat の loop だとアプリごとに 0.2 秒かかるので、1 回の sh でまとめて調べる
+- name: Check that Dock apps exist
+  command:
+    argv: "{{ ['/bin/sh', '-c', 'for a; do if [ -e \"$a\" ]; then printf \"%s\\n\" \"$a\"; fi; done', 'sh'] + dock_apps }}"
+  register: dock_apps_stat
+  changed_when: false
+  check_mode: false
+
+- name: Collect existing and missing Dock apps
+  set_fact:
+    dock_apps_present: "{{ dock_apps | select('in', dock_apps_stat.stdout_lines) | list }}"
+    dock_apps_missing: "{{ dock_apps | reject('in', dock_apps_stat.stdout_lines) | list }}"
+
+- name: Warn about Dock apps that are not installed
+  fail:
+    msg: "Dock に載せる予定だが未インストール: {{ dock_apps_missing | join(', ') }}"
+  when: dock_apps_missing | length > 0
+  ignore_errors: true
+
+# 現在の Dock と比較して、違うときだけ組み直す (毎回 Dock を再構築しない)
+- name: Get current Dock items
+  command: dockutil --list
+  register: dock_list
+  changed_when: false
+  check_mode: false
+
+- name: Build desired and current Dock item lists
+  set_fact:
+    dock_current: "{{ dock_list.stdout_lines | map('regex_replace', '^([^\\t]*)\\t.*$', '\\1') | list }}"
+    dock_desired: "{{ dock_apps_present | map('basename') | map('regex_replace', '\\.app$', '') | list + ['Downloads'] }}"
+
+- name: Rebuild Dock
+  when: dock_current != dock_desired
+  block:
+    - name: Remove all Dock items
+      command: dockutil --remove all --no-restart
+
+    - name: Add apps to Dock
+      command: "dockutil --add '{{ item }}' --no-restart"
+      loop: "{{ dock_apps_present }}"
+
+    - name: Add Downloads folder to Dock
+      command: >
+        dockutil --add '~/Downloads'
+        --view fan
+        --display stack
+        --sort dateadded
+        --section others
+        --no-restart
+      notify: Restart Dock

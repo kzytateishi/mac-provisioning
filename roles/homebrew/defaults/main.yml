@@ -1,0 +1,125 @@
+---
+homebrew_taps:
+  - hashicorp/tap
+  - stablyai/orca
+  - stripe/stripe-cli
+  - withgraphite/tap
+
+homebrew_packages:
+  - actionlint
+  - ansible
+  - ansible-lint # playbook の lint (task lint)
+  - ast-grep # AST ベースのコード検索・置換 (sg)
+  - atuin # Next-gen shell history with SQLite and sync
+  - awscli
+  - bandwhich # Network bandwidth usage by process
+  - bat # Modern replacement for cat
+  - bottom # Modern system monitor (btm)
+  - cliclick
+  - cocoapods
+  - curl
+  - direnv
+  - displayplacer # ディスプレイの解像度 (スケーリング) を CLI で設定
+  - dockutil # Manage macOS Dock items
+  - doggo # Human-friendly DNS lookup CLI
+  - dust # More readable replacement for du
+  - eza # Modern replacement for ls
+  - fd # Faster and more user-friendly replacement for find
+  - ffmpeg
+  - figlet
+  - forgit # Interactive git operations powered by fzf
+  - fzf # Fuzzy finder for history, completion, and interactive selection
+  - fzf-tab # Use fzf as the zsh completion selector
+  - git-delta # git diff / log のシンタックスハイライト付きビューア (delta)
+  - gh # GitHub CLI
+  - git
+  - glow # ターミナルで Markdown を整形表示
+  - go-task
+  - withgraphite/tap/graphite # Graphite CLI (gt): スタック PR の作成・同期
+  - graphviz
+  - httpie # More user-friendly replacement for curl for HTTP/API requests
+  - hyperfine # コマンドのベンチマーク
+  - imagemagick
+  - iperf3 # Network bandwidth measurement tool
+  - jq
+  - killport
+  - lazygit
+  - mas # Mac App Store CLI
+  - mise
+  - mtr # Network diagnostic tool combining ping and traceroute
+  - mysql
+  - neovim
+  - nkf
+  - openapi-generator
+  - openssl
+  - procs # Modern replacement for ps
+  - pwgen
+  - qt
+  - readline
+  - ripgrep # Faster replacement for grep / ag
+  - sl
+  - starship
+  - stripe/stripe-cli/stripe # Stripe CLI
+  - telnet
+  - terminal-notifier # macOS notifications from CLI
+  - terraform
+  - tig
+  - tlrc # Simplified man pages (tldr client; the old tldr formula is disabled)
+  - tmux
+  - tmuxinator # Manage complex tmux sessions with YAML configs
+  - tree-sitter-cli
+  - trippy # Modern network diagnostic tool similar to mtr
+  - uv
+  - vips
+  - yamllint # YAML の lint (task lint)
+  - yazi # ターミナルのファイルマネージャ
+  - wget
+  - yq # jq for YAML
+  - zoxide # Smarter replacement / enhancement for cd
+  - zsh
+  - zsh-completions
+
+# sudo が要る cask はここに書かず Brewfile.sudo に書く
+homebrew_cask_packages:
+  - 1password
+  - android-platform-tools
+  - android-studio
+  - appcleaner
+  - aws-vault-binary
+  - blender
+  - cursor
+  - chatgpt # ChatGPT Desktop
+  - claude # Claude Desktop
+  - claude-code@latest
+  - cleanshot
+  - codex # OpenAI Codex CLI (npm 版と二重にしない)
+  - copilot-cli # GitHub Copilot CLI
+  - datagrip
+  - dropbox # bootstrap.sh で先に入れる (SSH 鍵の同期に要る)
+  - fantastical
+  - figma
+  - fliqlo
+  - google-chrome
+  - font-hackgen
+  - font-hackgen-nerd
+  - iterm2
+  - linear
+  - miro
+  - ngrok
+  - notion
+  - obsidian
+  - stablyai/orca/orca
+  - postman
+  - raycast
+  - readdle-spark # Spark Desktop
+  - slack
+  - spotify
+  - visual-studio-code
+
+  # fonts
+  - font-roboto
+  - font-noto-sans
+  - font-noto-serif
+
+# Brewfile.sudo の cask (task casks が端末で入れる)
+homebrew_cask_sudo_packages: "{{ lookup('file', playbook_dir ~ '/Brewfile.sudo') | regex_findall('(?m)^cask \"([^\"]+)\"') }}"

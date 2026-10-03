@@ -1,0 +1,12 @@
+---
+profile: moderate
+
+exclude_paths:
+  - .ansible/
+
+skip_list:
+  # 既存のタスクは短いモジュール名で書いている
+  - fqcn[action-core]
+  - fqcn[action]
+  # タスク名は英語の小文字始まりで統一している
+  - name[casing]

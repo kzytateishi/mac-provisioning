@@ -1,0 +1,226 @@
+---
+# ---------------------------------------------------------------- Network
+- name: Get current DNS servers
+  command: networksetup -getdnsservers Wi-Fi
+  register: mac_defaults_current_dns
+  changed_when: false
+  check_mode: false
+
+- name: Set DNS servers
+  command: networksetup -setdnsservers Wi-Fi {{ mac_defaults_dns_servers | join(' ') }}
+  when: mac_defaults_current_dns.stdout_lines != mac_defaults_dns_servers
+
+# defaults の値は files/sync_defaults.py でセクションごとにまとめて揃える。
+# osx_defaults は 1 項目 0.2 秒かかり、型違いの値 (旧 playbook が string で書いたものなど) で止まるため。
+# 変えた項目を stdout に 1 行ずつ出すので、それで changed を判定する
+
+# ---------------------------------------------------------------- Dock
+- name: Dock preferences
+  command:
+    argv: ["/usr/bin/python3", "{{ role_path }}/files/sync_defaults.py", "{{ ansible_check_mode | ternary('check', 'apply') }}", "{{ mac_defaults_items | to_json }}"]
+  vars:
+    mac_defaults_items:
+      - { domain: com.apple.dock, key: autohide, type: bool, value: true }
+      - { domain: com.apple.dock, key: tilesize, type: float, value: 55.0 }
+      - { domain: com.apple.dock, key: wvous-bl-corner, type: int, value: 13 } # 左下のホットコーナーで画面ロック
+      - { domain: com.apple.dock, key: wvous-br-corner, type: int, value: 1 } # 右下は なし (既定はクイックメモ)
+      - { domain: com.apple.dock, key: show-recents, type: bool, value: false } # 最近使ったアプリを出さない
+      - { domain: com.apple.dock, key: mru-spaces, type: bool, value: false } # 使用状況で操作スペースを並べ替えない
+      - { domain: com.apple.dock, key: autohide-delay, type: float, value: 0.0 } # 自動非表示の Dock をすぐ出す
+      - { domain: com.apple.dock, key: minimize-to-application, type: bool, value: true } # 最小化はアプリアイコンへ
+      - { domain: com.apple.dock, key: expose-group-apps, type: bool, value: true } # Mission Control でウィンドウをアプリごとにまとめる
+      - { domain: com.apple.WindowManager, key: EnableTiledWindowMargins, type: bool, value: false } # タイル配置の隙間なし
+  register: mac_defaults_dock
+  changed_when: mac_defaults_dock.stdout | length > 0
+  check_mode: false
+  notify: Restart Dock
+
+# ---------------------------------------------------------------- Finder
+- name: Finder preferences
+  command:
+    argv: ["/usr/bin/python3", "{{ role_path }}/files/sync_defaults.py", "{{ ansible_check_mode | ternary('check', 'apply') }}", "{{ mac_defaults_items | to_json }}"]
+  vars:
+    mac_defaults_items:
+      - { domain: com.apple.finder, key: ShowStatusBar, type: bool, value: true }
+      - { domain: com.apple.finder, key: ShowPathbar, type: bool, value: true }
+      - { domain: com.apple.finder, key: FXPreferredViewStyle, type: string, value: clmv } # カラム表示
+      - { domain: com.apple.finder, key: NewWindowTarget, type: string, value: PfLo } # 新規ウィンドウはホーム
+      - { domain: com.apple.finder, key: NewWindowTargetPath, type: string, value: "file://{{ ansible_facts.env.HOME }}" }
+      - { domain: com.apple.finder, key: _FXSortFoldersFirst, type: bool, value: true } # フォルダを先頭に
+      - { domain: com.apple.finder, key: FXDefaultSearchScope, type: string, value: SCcf } # 検索は現在のフォルダ
+      - { domain: com.apple.finder, key: FXEnableExtensionChangeWarning, type: bool, value: false } # 拡張子変更の警告を出さない
+      - { domain: com.apple.finder, key: _FXShowPosixPathInTitle, type: bool, value: true } # タイトルにフルパス
+      - { domain: com.apple.finder, key: ShowHardDrivesOnDesktop, type: bool, value: true } # デスクトップに内蔵ディスクを出す
+      - { domain: NSGlobalDomain, key: AppleShowAllExtensions, type: bool, value: true }
+      - { domain: com.apple.desktopservices, key: DSDontWriteNetworkStores, type: bool, value: true } # ネットワークに .DS_Store を作らない
+      - { domain: com.apple.desktopservices, key: DSDontWriteUSBStores, type: bool, value: true } # USB に .DS_Store を作らない
+  register: mac_defaults_finder
+  changed_when: mac_defaults_finder.stdout | length > 0
+  check_mode: false
+  notify: Restart Finder
+
+# ---------------------------------------------------------------- Screenshot
+- name: Screencapture preferences
+  command:
+    argv: ["/usr/bin/python3", "{{ role_path }}/files/sync_defaults.py", "{{ ansible_check_mode | ternary('check', 'apply') }}", "{{ mac_defaults_items | to_json }}"]
+  vars:
+    mac_defaults_items:
+      - { domain: com.apple.screencapture, key: name, type: string, value: Screenshot }
+      - { domain: com.apple.screencapture, key: location, type: string, value: "{{ ansible_facts.env.HOME }}/Pictures/Screenshots" }
+      - { domain: com.apple.screencapture, key: type, type: string, value: png }
+      - { domain: com.apple.screencapture, key: disable-shadow, type: bool, value: true } # ウィンドウの影を含めない
+  register: mac_defaults_screencapture
+  changed_when: mac_defaults_screencapture.stdout | length > 0
+  check_mode: false
+  notify: Restart SystemUIServer
+
+# 標準のスクリーンショットのショートカットを切る (CleanShot に割り当てるため)。
+# 新しい Mac では plist にキー自体が無いので、キーの値ごと書く。
+- name: Check screenshot shortcuts
+  command: /usr/libexec/PlistBuddy -c "Print :AppleSymbolicHotKeys:{{ item.id }}:enabled" {{ ansible_facts.env.HOME }}/Library/Preferences/com.apple.symbolichotkeys.plist
+  loop: "{{ mac_defaults_disabled_screenshot_hotkeys }}"
+  loop_control:
+    label: "{{ item.id }}"
+  register: mac_defaults_screenshot_hotkeys
+  failed_when: false
+  changed_when: false
+  check_mode: false
+
+- name: Disable screenshot shortcuts
+  command: >-
+    defaults write com.apple.symbolichotkeys AppleSymbolicHotKeys -dict-add {{ item.item.id }}
+    '{ enabled = 0; value = { parameters = ({{ item.item.parameters | join(", ") }}); type = standard; }; }'
+  loop: "{{ mac_defaults_screenshot_hotkeys.results }}"
+  loop_control:
+    label: "{{ item.item.id }}"
+  when: item.stdout not in ['false', '0']
+  notify: Activate keyboard shortcuts
+
+# ---------------------------------------------------------------- CleanShot X
+# 保存先は macOS 標準のスクリーンショットと同じ (~/Pictures/Screenshots → Dropbox)
+- name: CleanShot preferences
+  command:
+    argv: ["/usr/bin/python3", "{{ role_path }}/files/sync_defaults.py", "{{ ansible_check_mode | ternary('check', 'apply') }}", "{{ mac_defaults_items | to_json }}"]
+  vars:
+    mac_defaults_items:
+      - { domain: pl.maketheweb.cleanshotx, key: exportPath, type: string, value: "{{ ansible_facts.env.HOME }}/Pictures/Screenshots" }
+      - { domain: pl.maketheweb.cleanshotx, key: popupAskForDestinationWhenSaving, type: bool, value: false } # 保存のたびに保存先を聞かない
+      - { domain: pl.maketheweb.cleanshotx, key: captureWithoutDesktopIcons, type: bool, value: true } # デスクトップのアイコンを写さない
+      - { domain: pl.maketheweb.cleanshotx, key: deletePopupAfterDragging, type: bool, value: true } # ドラッグで渡したらプレビューを閉じる
+      - { domain: pl.maketheweb.cleanshotx, key: popupSize, type: int, value: 2 } # 撮影後のプレビューの大きさ
+      - { domain: pl.maketheweb.cleanshotx, key: transparentWindowBackground, type: bool, value: false } # ウィンドウの撮影は背景付き
+      - { domain: pl.maketheweb.cleanshotx, key: analyticsAllowed, type: bool, value: false }
+      - { domain: pl.maketheweb.cleanshotx, key: SUEnableAutomaticChecks, type: bool, value: false } # 更新は Homebrew で入れる
+  register: mac_defaults_cleanshot
+  changed_when: mac_defaults_cleanshot.stdout | length > 0
+  check_mode: false
+  notify: Restart CleanShot
+
+# ショートカットは data 型で、osx_defaults では書けないので defaults write -data で書く
+- name: Check CleanShot shortcuts
+  shell: defaults export pl.maketheweb.cleanshotx - | plutil -extract {{ item.key }} raw -o - -
+  loop: "{{ mac_defaults_cleanshot_shortcuts }}"
+  loop_control:
+    label: "{{ item.key }}"
+  register: mac_defaults_cleanshot_shortcuts_current
+  failed_when: false
+  changed_when: false
+  check_mode: false
+
+- name: Set CleanShot shortcuts
+  shell: >-
+    defaults write pl.maketheweb.cleanshotx {{ item.item.key }}
+    -data "$(printf '%s' '{{ item.item.value }}' | xxd -p | tr -d '\n')"
+  loop: "{{ mac_defaults_cleanshot_shortcuts_current.results }}"
+  loop_control:
+    label: "{{ item.item.key }}"
+  when: item.stdout != (item.item.value | b64encode)
+  notify: Restart CleanShot
+
+# ---------------------------------------------------------------- Menu bar
+- name: Menu bar preferences
+  command:
+    argv: ["/usr/bin/python3", "{{ role_path }}/files/sync_defaults.py", "{{ ansible_check_mode | ternary('check', 'apply') }}", "{{ mac_defaults_items | to_json }}"]
+  vars:
+    mac_defaults_items:
+      - { domain: com.apple.controlcenter, key: Bluetooth, type: int, value: 18, host: currentHost } # Bluetooth を表示
+      - { domain: com.apple.controlcenter, key: BatteryShowPercentage, type: bool, value: true } # バッテリー残量を % で表示
+  register: mac_defaults_menu_bar
+  changed_when: mac_defaults_menu_bar.stdout | length > 0
+  check_mode: false
+  notify: Restart SystemUIServer
+
+# ---------------------------------------------------------------- Dialogs / Misc / Trackpad / Keyboard
+# 再起動が要らないものはまとめて 1 回で揃える
+- name: System preferences
+  command:
+    argv: ["/usr/bin/python3", "{{ role_path }}/files/sync_defaults.py", "{{ ansible_check_mode | ternary('check', 'apply') }}", "{{ mac_defaults_items | to_json }}"]
+  vars:
+    mac_defaults_items:
+      # 保存・印刷ダイアログを最初から展開する
+      - { domain: NSGlobalDomain, key: NSNavPanelExpandedStateForSaveMode, type: bool, value: true }
+      - { domain: NSGlobalDomain, key: NSNavPanelExpandedStateForSaveMode2, type: bool, value: true }
+      - { domain: NSGlobalDomain, key: PMPrintingExpandedStateForPrint, type: bool, value: true }
+      - { domain: NSGlobalDomain, key: PMPrintingExpandedStateForPrint2, type: bool, value: true }
+      - { domain: NSGlobalDomain, key: NSDocumentSaveNewDocumentsToCloud, type: bool, value: false } # 新規書類は iCloud でなくディスクに保存
+      - { domain: com.apple.print.PrintingPrefs, key: Quit When Finished, type: bool, value: true } # 印刷が終わったらプリンタアプリを終了
+      # Misc
+      - { domain: com.apple.TimeMachine, key: DoNotOfferNewDisksForBackup, type: bool, value: true } # 新しいディスクを Time Machine に使うか聞かない
+      - { domain: com.apple.ImageCapture, key: disableHotPlug, type: bool, value: true } # デバイスを挿しても写真を開かない
+      - { domain: com.apple.AdLib, key: allowApplePersonalizedAdvertising, type: bool, value: false }
+      - { domain: NSGlobalDomain, key: com.apple.sound.beep.feedback, type: int, value: 0 } # 音量変更時に音を鳴らさない
+      # Trackpad: タップでクリック、3 本指ドラッグ、速度
+      - { domain: com.apple.AppleMultitouchTrackpad, key: Clicking, type: bool, value: true }
+      - { domain: com.apple.driver.AppleBluetoothMultitouch.trackpad, key: Clicking, type: bool, value: true }
+      - { domain: com.apple.AppleMultitouchTrackpad, key: TrackpadThreeFingerDrag, type: bool, value: true }
+      - { domain: com.apple.driver.AppleBluetoothMultitouch.trackpad, key: TrackpadThreeFingerDrag, type: bool, value: true }
+      - { domain: NSGlobalDomain, key: com.apple.mouse.tapBehavior, type: bool, value: true, host: currentHost }
+      - { domain: NSGlobalDomain, key: com.apple.trackpad.scaling, type: float, value: 3.0 }
+      # Keyboard
+      - { domain: NSGlobalDomain, key: KeyRepeat, type: int, value: 2 }
+      - { domain: NSGlobalDomain, key: InitialKeyRepeat, type: int, value: 15 }
+      - { domain: NSGlobalDomain, key: NSAutomaticSpellingCorrectionEnabled, type: bool, value: false }
+      - { domain: NSGlobalDomain, key: NSAutomaticCapitalizationEnabled, type: bool, value: false }
+      - { domain: NSGlobalDomain, key: NSAutomaticQuoteSubstitutionEnabled, type: bool, value: false }
+      - { domain: NSGlobalDomain, key: NSAutomaticDashSubstitutionEnabled, type: bool, value: false }
+      - { domain: NSGlobalDomain, key: NSAutomaticPeriodSubstitutionEnabled, type: bool, value: false } # スペース 2 回でピリオドにしない
+      - { domain: NSGlobalDomain, key: AppleKeyboardUIMode, type: int, value: 3 } # Tab でダイアログのすべてのコントロールに移動
+      # エディタでキー長押しをアクセント入力ではなくリピートにする。
+      # グローバル設定が残っているとアプリ別設定が効かないので消す。
+      - { domain: NSGlobalDomain, key: ApplePressAndHoldEnabled, state: absent }
+  register: mac_defaults_system
+  changed_when: mac_defaults_system.stdout | length > 0
+  check_mode: false
+
+- name: Disable press-and-hold in editors
+  command:
+    argv: ["/usr/bin/python3", "{{ role_path }}/files/sync_defaults.py", "{{ ansible_check_mode | ternary('check', 'apply') }}", "{{ mac_defaults_items | to_json }}"]
+  vars:
+    mac_defaults_items: "{{ mac_defaults_press_and_hold_disabled_apps | map('community.general.dict_kv', 'domain') | map('combine', {'key': 'ApplePressAndHoldEnabled', 'type': 'bool', 'value': false}) | list }}"
+  register: mac_defaults_press_and_hold
+  changed_when: mac_defaults_press_and_hold.stdout | length > 0
+  check_mode: false
+
+- name: Check next window shortcut
+  command: plutil -extract AppleSymbolicHotKeys.27 json -o - {{ ansible_facts.env.HOME }}/Library/Preferences/com.apple.symbolichotkeys.plist
+  register: mac_defaults_next_window_hotkey
+  failed_when: false
+  changed_when: false
+  check_mode: false
+
+# 旧形式 ('{ enabled = 1; ... }') だと値が string で入って効かないので、XML で型付きで書く。
+# 比較も型込みなので、string で入っている値は書き直される
+- name: Set next window shortcut
+  command: >-
+    defaults write com.apple.symbolichotkeys AppleSymbolicHotKeys -dict-add 27
+    '<dict><key>enabled</key><true/><key>value</key><dict><key>parameters</key>
+    <array>{% for p in mac_defaults_next_window_hotkey_parameters %}<integer>{{ p }}</integer>{% endfor %}</array>
+    <key>type</key><string>standard</string></dict></dict>'
+  vars:
+    mac_defaults_next_window_hotkey_wanted:
+      enabled: true
+      value: { type: standard, parameters: "{{ mac_defaults_next_window_hotkey_parameters }}" }
+  when: >-
+    mac_defaults_next_window_hotkey.rc != 0
+    or (mac_defaults_next_window_hotkey.stdout | from_json) != mac_defaults_next_window_hotkey_wanted
+  notify: Activate keyboard shortcuts

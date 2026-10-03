@@ -1,0 +1,12 @@
+---
+- name: Get Spotlight indexing status of the boot volume
+  command: mdutil -s /
+  register: spotlight_status
+  changed_when: false
+  check_mode: false
+
+# 無効化は一度で済む。毎回 -E でインデックスを消す必要はない。
+- name: Disable Spotlight indexing on all volumes
+  command: mdutil -a -i off
+  become: true
+  when: "'Indexing enabled' in spotlight_status.stdout"

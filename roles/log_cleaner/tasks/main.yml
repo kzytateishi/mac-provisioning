@@ -1,0 +1,24 @@
+---
+# plist の Label と launchctl の判定名を一致させること (過去にずれていて一度もロードされていなかった)
+- name: Create clean-log-files.plist
+  template:
+    src: clean-log-files.plist
+    dest: ~/Library/LaunchAgents/{{ log_cleaner_label }}.plist
+  register: log_cleaner_plist
+
+- name: Check if the agent is loaded
+  command: launchctl print gui/{{ ansible_facts.user_uid }}/{{ log_cleaner_label }}
+  register: log_cleaner_loaded
+  failed_when: false
+  changed_when: false
+  check_mode: false
+
+- name: Unload the agent before reloading a changed plist
+  command: launchctl bootout gui/{{ ansible_facts.user_uid }}/{{ log_cleaner_label }}
+  when: log_cleaner_plist.changed and log_cleaner_loaded.rc == 0
+
+- name: Load the agent
+  command: >
+    launchctl bootstrap gui/{{ ansible_facts.user_uid }}
+    {{ ansible_facts.env.HOME }}/Library/LaunchAgents/{{ log_cleaner_label }}.plist
+  when: log_cleaner_plist.changed or log_cleaner_loaded.rc != 0

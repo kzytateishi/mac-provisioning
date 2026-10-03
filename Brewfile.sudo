@@ -1,0 +1,11 @@
+# インストールに sudo が要る cask (pkg で入れる、/usr/local に置く)。
+# Ansible の中では brew が呼ぶ sudo がパスワードを聞けずに止まるので、
+# `task run` が playbook の前に端末で `brew bundle` する (task casks)。
+# homebrew ロールはこのファイルを読んで、入っていなければ警告する。
+cask "docker-desktop"
+cask "google-japanese-ime"
+cask "karabiner-elements"
+cask "tailscale-app"
+cask "wireshark-app"
+cask "xquartz"
+cask "zoom"

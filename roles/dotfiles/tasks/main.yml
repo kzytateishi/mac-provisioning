@@ -1,0 +1,46 @@
+---
+# HTTPS で clone する。SSH 鍵の有無に依存せず、push は gh の認証で行う。
+- name: Clone the dotfiles repository
+  git:
+    repo: https://github.com/kzytateishi/dotfiles.git
+    dest: ~/workspace/dotfiles
+    clone: true
+    update: false
+
+# Taskfile より先に張る。Taskfile が .tmuxinator/default.yml をリンクする際に
+# ~/.tmuxinator を実ディレクトリとして作ってしまい、こちらが失敗するため
+- name: Create symlinks to Dropbox-managed dotfiles
+  file:
+    src: "~/Dropbox/05_Dev/dotfiles/{{ item.src }}"
+    dest: "~/{{ item.dest }}"
+    state: link
+    force: true
+  loop:
+    - { src: .tmuxinator, dest: .tmuxinator }
+    - { src: .gitconfig.local, dest: .gitconfig.local }
+    - { src: .aws, dest: .aws }
+    - { src: .ngrok, dest: .ngrok2 }
+
+- name: Run Taskfile
+  command: task install
+  args:
+    chdir: ~/workspace/dotfiles
+  register: dotfiles_install
+  # Taskfile の link 関数は新規リンクを "src => dst"、既存を "= dst" と出す
+  changed_when: "'=>' in dotfiles_install.stdout"
+
+# iTerm2 の設定は dotfiles の com.googlecode.iterm2.plist から読ませる
+- name: Load iTerm2 preferences from the dotfiles repository
+  community.general.osx_defaults:
+    domain: com.googlecode.iterm2
+    key: "{{ item.key }}"
+    type: "{{ item.type }}"
+    value: "{{ item.value }}"
+  loop:
+    - { key: PrefsCustomFolder, type: string, value: "{{ ansible_facts.env.HOME }}/workspace/dotfiles" }
+    - { key: LoadPrefsFromCustomFolder, type: bool, value: true }
+
+- name: Create ~/bin directory
+  file:
+    path: ~/bin
+    state: directory

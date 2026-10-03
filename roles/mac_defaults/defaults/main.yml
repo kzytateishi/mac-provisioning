@@ -1,0 +1,29 @@
+---
+mac_defaults_dns_servers:
+  - 8.8.8.8
+  - 8.8.4.4
+
+# ApplePressAndHoldEnabled を無効にするアプリの bundle id
+mac_defaults_press_and_hold_disabled_apps:
+  - com.microsoft.VSCode
+  - com.todesktop.230313mzl4w4u92 # Cursor
+
+# 無効にするスクリーンショットのショートカット (com.apple.symbolichotkeys の番号)
+# parameters は (文字コード, キーコード, 修飾キー)。macOS の既定値をそのまま入れている
+mac_defaults_disabled_screenshot_hotkeys:
+  - { id: 28, parameters: [51, 20, 1179648] } # ⌘⇧3 画面をファイルに保存
+  - { id: 29, parameters: [51, 20, 1441792] } # ⌃⌘⇧3 画面をクリップボードにコピー
+  - { id: 30, parameters: [52, 21, 1179648] } # ⌘⇧4 選択範囲をファイルに保存
+  - { id: 31, parameters: [52, 21, 1441792] } # ⌃⌘⇧4 選択範囲をクリップボードにコピー
+  - { id: 184, parameters: [53, 23, 1179648] } # ⌘⇧5 スクリーンショットと収録のオプション
+
+# 「次のウインドウを操作対象にする」(symbolichotkeys の 27 番)。
+# macOS の既定は ⌘` だが、JIS の @ キー位置 (US 配列では ⌘[) で保存されていたことがあるので明示する
+mac_defaults_next_window_hotkey_parameters: [96, 50, 1048576] # ⌘`
+
+# CleanShot X のショートカット (上で空けた macOS 標準のキーを割り当てる)。
+# CleanShot は {"carbonModifiers", "carbonKey"} の JSON を data 型で持つ。768 = ⌘⇧
+mac_defaults_cleanshot_shortcuts:
+  - { key: LAVAtakeFullscreen, value: '{"carbonModifiers":768,"carbonKey":20}' } # ⌘⇧3 全画面
+  - { key: LAVAtakeArea, value: '{"carbonModifiers":768,"carbonKey":21}' } # ⌘⇧4 範囲
+  - { key: LAVAtakeAllInOne, value: '{"carbonModifiers":768,"carbonKey":23}' } # ⌘⇧5 All-in-One
